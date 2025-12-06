@@ -5,7 +5,7 @@
   export let data: { message?: string | null };
 </script>
 
-<section class="min-h-screen flex items-center justify-center bg-gray-100">
+<section class="min-h-screen flex items-center justify-center bg-gray-300">
   <div class="w-full max-w-md bg-white rounded-2xl shadow p-8 space-y-6">
     <h1 class="text-2xl font-bold text-center text-gray-800">Iniciar sesión</h1>
 

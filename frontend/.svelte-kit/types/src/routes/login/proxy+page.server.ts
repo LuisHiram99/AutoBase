@@ -57,7 +57,7 @@ export const actions = {
 
       if (!res.ok) {
         return fail(res.status, {
-          error: 'Credenciales inválidas o error al iniciar sesión.',
+          error: 'Credenciales inválidas o error al iniciar sesión...',
           values: { email }
         });
       }
@@ -80,7 +80,6 @@ export const actions = {
       // maxAge: 60 * 60 // opcional: 1 hora
     });
 
-    // 🔹 Este redirect ya no lo atrapa el catch
     throw redirect(303, '/');
   }
 };
