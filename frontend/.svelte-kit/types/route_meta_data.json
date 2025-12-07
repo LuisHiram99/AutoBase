@@ -8,6 +8,9 @@
 		"src/routes/clientes/+page.ts",
 		"src/routes/+layout.server.ts"
 	],
+	"/cuenta": [
+		"src/routes/+layout.server.ts"
+	],
 	"/empleados": [
 		"src/routes/empleados/+page.ts",
 		"src/routes/+layout.server.ts"

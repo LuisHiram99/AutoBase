@@ -27,13 +27,14 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/clientes" | "/empleados" | "/login" | "/logout" | "/piezas" | "/talleres" | "/vehiculos";
+		RouteId(): "/" | "/clientes" | "/cuenta" | "/empleados" | "/login" | "/logout" | "/piezas" | "/talleres" | "/vehiculos";
 		RouteParams(): {
 			
 		};
 		LayoutParams(): {
 			"/": Record<string, never>;
 			"/clientes": Record<string, never>;
+			"/cuenta": Record<string, never>;
 			"/empleados": Record<string, never>;
 			"/login": Record<string, never>;
 			"/logout": Record<string, never>;
@@ -41,7 +42,7 @@ declare module "$app/types" {
 			"/talleres": Record<string, never>;
 			"/vehiculos": Record<string, never>
 		};
-		Pathname(): "/" | "/clientes" | "/clientes/" | "/empleados" | "/empleados/" | "/login" | "/login/" | "/logout" | "/logout/" | "/piezas" | "/piezas/" | "/talleres" | "/talleres/" | "/vehiculos" | "/vehiculos/";
+		Pathname(): "/" | "/clientes" | "/clientes/" | "/cuenta" | "/cuenta/" | "/empleados" | "/empleados/" | "/login" | "/login/" | "/logout" | "/logout/" | "/piezas" | "/piezas/" | "/talleres" | "/talleres/" | "/vehiculos" | "/vehiculos/";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): "/img/logo/logo-chinos.jpeg" | "/robots.txt" | string & {};
 	}
