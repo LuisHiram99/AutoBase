@@ -122,22 +122,8 @@ class CarBase(BaseModel):
     brand: str
     model: str
 
-
-class CustomerCarBase(BaseModel):
-    customer_id: int
-    car_id: int
-    license_plate: str
-    color: Optional[str] = None
-
-
 class Car(CarBase):
     car_id: int
-
-    model_config = {"from_attributes": True}
-
-
-class CustomerCar(CustomerCarBase):
-    customer_car_id: int
 
     model_config = {"from_attributes": True}
 
@@ -145,16 +131,38 @@ class CustomerCar(CustomerCarBase):
 class CarCreate(CarBase):
     pass
 
-
 class CarUpdate(BaseModel):
     year: Optional[int] = None
     brand: Optional[str] = None
     model: Optional[str] = None
 
+# ---
+class CustomerCarBase(BaseModel):
+    customer_id: int
+    car_id: int
+    license_plate: str
+    color: Optional[str] = None
+
+class CustomerCar(CustomerCarBase):
+    customer_car_id: int
+
+    model_config = {"from_attributes": True}
+
+class CustomerCarWithCarInfo(CustomerCarBase):
+    customer_car_id: int
+    car_brand: str
+    car_model: str
+    car_year: int
+
+    model_config = {"from_attributes": True}
+
+class CarCreateForWorkshop(BaseModel):
+    year: int
+    brand: str
+    model: str
 
 class CustomerCarCreate(CustomerCarBase):
     pass
-
 
 class CustomerCarUpdate(CustomerCarBase):
     pass
@@ -172,6 +180,7 @@ class CustomerCarAssign(BaseModel):
     car_id: int
     license_plate: str
     color: Optional[str] = None
+
 
 
 
