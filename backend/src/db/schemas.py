@@ -47,12 +47,12 @@ class CustomerCreateForWorkshop(BaseModel):
     phone: str
     email: Optional[str] = None
 
-
 class CustomerUpdateForWorkshop(BaseModel):
     first_name: str
     last_name: str
     phone: str
     email: Optional[str] = None
+
 
 # --------------------- End of Customer ----------------------
 
@@ -122,22 +122,8 @@ class CarBase(BaseModel):
     brand: str
     model: str
 
-
-class CustomerCarBase(BaseModel):
-    customer_id: int
-    car_id: int
-    license_plate: str
-    color: Optional[str] = None
-
-
 class Car(CarBase):
     car_id: int
-
-    model_config = {"from_attributes": True}
-
-
-class CustomerCar(CustomerCarBase):
-    customer_car_id: int
 
     model_config = {"from_attributes": True}
 
@@ -145,16 +131,38 @@ class CustomerCar(CustomerCarBase):
 class CarCreate(CarBase):
     pass
 
-
 class CarUpdate(BaseModel):
     year: Optional[int] = None
     brand: Optional[str] = None
     model: Optional[str] = None
 
+# ---
+class CustomerCarBase(BaseModel):
+    customer_id: int
+    car_id: int
+    license_plate: str
+    color: Optional[str] = None
+
+class CustomerCar(CustomerCarBase):
+    customer_car_id: int
+
+    model_config = {"from_attributes": True}
+
+class CustomerCarWithCarInfo(CustomerCarBase):
+    customer_car_id: int
+    car_brand: str
+    car_model: str
+    car_year: int
+
+    model_config = {"from_attributes": True}
+
+class CarCreateForWorkshop(BaseModel):
+    year: int
+    brand: str
+    model: str
 
 class CustomerCarCreate(CustomerCarBase):
     pass
-
 
 class CustomerCarUpdate(CustomerCarBase):
     pass
@@ -172,6 +180,7 @@ class CustomerCarAssign(BaseModel):
     car_id: int
     license_plate: str
     color: Optional[str] = None
+
 
 
 
@@ -279,3 +288,95 @@ class WorkerUpdate(BaseModel):
     phone: Optional[str] = None
     position: Optional[str] = None
     nickname: Optional[str] = None
+
+# --------------------- End of Worker ----------------------
+
+# --------------------- Jobs ----------------------
+class StatusEnum(str, Enum):
+    pending = "pending"
+    in_progress = "in_progress"
+    completed = "completed"
+
+class JobBase(BaseModel):
+    invoice: str
+    service_description: Optional[str] = None
+    start_date: str
+    end_date: Optional[str] = None
+    status: StatusEnum
+
+class Job(JobBase):
+    job_id: int
+    workshop_id: int
+    customer_car_id: int
+
+    model_config = {"from_attributes": True}
+
+class JobWithCarInfo(JobBase):
+    job_id: int
+    workshop_id: int
+    customer_car_id: int
+    car_brand: str
+    car_model: str
+    car_year: int
+    license_plate: str
+    car_color: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+class JobCreate(BaseModel):
+    customer_car_id: int
+    invoice: str
+    service_description: Optional[str] = None
+    start_date: str
+    end_date: Optional[str] = None
+    status: StatusEnum
+    workshop_id: int
+
+class JobCreateForWorkshop(BaseModel):
+    customer_car_id: int
+    invoice: str
+    service_description: Optional[str] = None
+    start_date: str
+    end_date: Optional[str] = None
+    status: StatusEnum
+
+class JobUpdate(BaseModel):
+    invoice: Optional[str] = None
+    service_description: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    status: Optional[StatusEnum] = None
+
+# --------------------- Job Parts ----------------------
+class JobPartsBase(BaseModel):
+    job_id: int
+    part_id: int
+    quantity_used: int = 1
+
+class JobParts(JobPartsBase):
+    model_config = {"from_attributes": True}
+
+class JobPartsCreate(BaseModel):
+    part_id: int
+    quantity_used: int = 1
+
+class JobPartsUpdate(BaseModel):
+    quantity_used: Optional[int] = None
+
+# --------------------- Job Workers ----------------------
+class JobWorkersBase(BaseModel):
+    job_id: int
+    worker_id: int
+    job_role: str
+
+class JobWorkers(JobWorkersBase):
+    model_config = {"from_attributes": True}
+
+class JobWorkersCreate(BaseModel):
+    worker_id: int
+    job_role: str
+
+class JobWorkersUpdate(BaseModel):
+    job_role: Optional[str] = None
+
+# --------------------- End of Jobs ----------------------

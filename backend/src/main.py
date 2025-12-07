@@ -15,10 +15,11 @@ from handler.current_user import current_user
 from handler.rate_limiter import limiter
 from handler.parts import parts
 from handler.workers import workers
+from handler.jobs import jobs
 
 
 description = """
-API created for the Taller project.
+API created for the AutoBase project.
 """
 
 tags_metadata = [
@@ -77,11 +78,12 @@ app.include_router(users.router, prefix=api_route, tags=["users"])
 app.include_router(current_user.router, prefix=api_route, tags=["current_user"])
 app.include_router(customers.router, prefix=api_route, tags=["customers"])
 app.include_router(cars.router, prefix=api_route, tags=["cars"])
-#app.include_router(customer_car.router, prefix=api_route, tags=["customer_car"])
+app.include_router(customer_car.router, prefix=api_route, tags=["customer_car"])
 app.include_router(workshops.router, prefix=api_route, tags=["workshops"])
 app.include_router(workers.router, prefix=api_route, tags=["workers"])
 app.include_router(parts.router, prefix=api_route, tags=["parts"])
+app.include_router(jobs.router, prefix=api_route, tags=["jobs"])
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Taller API"}
+    return {"message": "Welcome to AutoBase API"}
