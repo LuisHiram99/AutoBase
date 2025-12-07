@@ -47,12 +47,12 @@ class CustomerCreateForWorkshop(BaseModel):
     phone: str
     email: Optional[str] = None
 
-
 class CustomerUpdateForWorkshop(BaseModel):
     first_name: str
     last_name: str
     phone: str
     email: Optional[str] = None
+
 
 # --------------------- End of Customer ----------------------
 

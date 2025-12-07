@@ -124,7 +124,7 @@ async def add_car_to_customer(
     """
     return await service.assign_customer_to_car(customer_id, car_data, db, current_user)
 
-@router.get("/customers/{customer_id}/cars", response_model=List[schemas.Car])
+@router.get("/customers/{customer_id}/cars", response_model=List[schemas.CustomerCarWithCarInfo])
 @limiter.limit("10/minute")
 async def get_customer_cars(
     request: Request,
@@ -134,5 +134,5 @@ async def get_customer_cars(
     """
     Get all cars associated with a customer
     """
-    return await service.get_cars_by_customer(customer_id, db, current_user)
+    return await service.get_customer_full_car_info_by_id(customer_id, db, current_user)
 

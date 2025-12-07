@@ -302,3 +302,36 @@ async def get_cars_by_customer(
     except Exception as e:
         print(f"Database error in get_cars_by_customer: {e}")
         raise fetchErrorException
+    
+async def get_customer_full_car_info_by_id(
+        customer_id: int,
+        db: AsyncSession,
+        current_user: dict):
+    '''
+    Construct a query to get full car information for a customer's cars
+    '''
+    try:
+        result = await db.execute(
+            select(models.CustomerCar, models.Car)
+            .join(models.Car, models.CustomerCar.car_id == models.Car.car_id)
+            .filter(models.CustomerCar.customer_id == customer_id)
+        )
+        
+        customer_cars_with_info = [
+            schemas.CustomerCarWithCarInfo(
+                customer_car_id=customer_car.customer_car_id,
+                customer_id=customer_car.customer_id,
+                car_id=customer_car.car_id,
+                license_plate=customer_car.license_plate,
+                color=customer_car.color,
+                car_brand=car.brand,
+                car_model=car.model,
+                car_year=car.year
+            )
+            for customer_car, car in result.all()
+        ]
+        
+        return customer_cars_with_info
+    except Exception as e:
+        print(f"Database error in get_customer_full_car_info: {e}")
+        raise fetchErrorException
