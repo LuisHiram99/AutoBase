@@ -3,8 +3,10 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy import text
-from db.database import Base
+from db.database import Base, get_db
 from db import models  # Import all models to ensure they're registered
+from fastapi.testclient import TestClient
+from main import app
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -67,19 +69,50 @@ async def async_session(async_engine):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def db_session(async_session):
+async def _setup_workshop(async_session):
+    """Internal fixture to set up the default workshop once per test"""
+    async with async_session() as session:
+        from sqlalchemy import select
+        # Check if workshop already exists
+        result = await session.execute(select(models.Workshop).where(models.Workshop.workshop_id == 1))
+        existing = result.scalar_one_or_none()
+        if not existing:
+            default_workshop = models.Workshop(
+                workshop_id=1,
+                workshop_name="Test Workshop",
+                address="123 Test St",
+                opening_hours="09:00",
+                closing_hours="18:00"
+            )
+            session.add(default_workshop)
+            await session.commit()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def db_session(async_session, _setup_workshop):
     """Provide a transactional scope for tests with default workshop"""
     async with async_session() as session:
-        # Create default workshop for foreign key constraints
-        default_workshop = models.Workshop(
-            workshop_id=1,
-            workshop_name="Test Workshop",
-            address="123 Test St",
-            opening_hours="09:00",
-            closing_hours="18:00"
-        )
-        session.add(default_workshop)
-        await session.commit()
-        
         yield session
-        await session.rollback()
+
+
+@pytest.fixture(scope="function")
+def client(async_session, _setup_workshop):
+    """Create a TestClient with overridden database dependency to use test database"""
+    # Create a separate session for the client to use in each request
+    async def override_get_db():
+        async with async_session() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+    
+    # Override the database dependency with our test database session
+    app.dependency_overrides[get_db] = override_get_db
+    
+    with TestClient(app) as test_client:
+        yield test_client
+    
+    # Clear overrides after test to avoid side effects
+    app.dependency_overrides.clear()

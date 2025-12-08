@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, Form, status
@@ -33,6 +33,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
+# Use argon2 for password hashing (using argon2-cffi backend)
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 class CreateUserRequest(BaseModel):
@@ -91,7 +92,7 @@ async def authenticate_user(db: db_dependency, email: str, password: str):
 
 def create_access_token(email: str, user_id: int, token_version: int, expires_delta: timedelta | None = None):
     encode = {"sub": email, "user_id": user_id, "token_version": token_version}
-    expires = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=15))
+    expires = datetime.now(timezone.utc) + (expires_delta if expires_delta else timedelta(minutes=15))
     encode.update({"exp": expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
