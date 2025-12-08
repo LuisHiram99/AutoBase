@@ -5,8 +5,7 @@ from jose import jwt
 from sqlalchemy import select
 
 class TestCurrentUser:
-    @pytest.mark.asyncio
-    async def test_get_current_user(self, client, db_session):
+    def test_get_current_user(self, client, db_session):
         """Test retrieving current user info via API endpoint"""
         # First, create a user
         user_data = {
@@ -43,8 +42,7 @@ class TestCurrentUser:
         assert response.status_code == 401
         assert response.json()["detail"] == "Not authenticated"
 
-    @pytest.mark.asyncio
-    async def test_patch_current_user(self, client, db_session):
+    def test_patch_current_user(self, client, db_session):
         """Test updating current user info via API endpoint"""
         # First, create a user
         user_data = {
@@ -77,8 +75,7 @@ class TestCurrentUser:
         assert updated_info["first_name"] == "Updated"
         assert updated_info["last_name"] == "User"  
 
-    @pytest.mark.asyncio
-    async def test_patch_current_user_unauthorized(self, client):
+    def test_patch_current_user_unauthorized(self, client):
         """Test that updating current user info without token returns unauthorized error"""
         update_data = {
             "first_name": "ShouldNot",
@@ -88,8 +85,7 @@ class TestCurrentUser:
         assert response.status_code == 401
         assert response.json()["detail"] == "Not authenticated"
     
-    @pytest.mark.asyncio
-    async def test_patch_current_user_invalid_data(self, client, db_session):
+    def test_patch_current_user_invalid_data(self, client, db_session):
         """Test that updating current user with invalid data returns validation error"""
         # First, create a user
         user_data = {
@@ -117,8 +113,7 @@ class TestCurrentUser:
         response = client.patch("/api/v1/me", json=update_data, headers=headers)
         assert response.status_code == 422
 
-    @pytest.mark.asyncio
-    async def test_delete_current_user(self, client, db_session):
+    def test_delete_current_user(self, client, db_session):
         # First, create a user
         user_data = {
             "first_name": "Delete",
