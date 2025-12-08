@@ -1,7 +1,8 @@
 import pytest
 from db import models
 from auth import auth
-from jose import jwt
+from jose import jwt    
+from sqlalchemy import select
 
 class TestAuthService:
     def test_verify_password(self):
@@ -124,20 +125,20 @@ class TestAuthService:
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 422  # Validation error
 
-@pytest.mark.asyncio
-async def test_user_role_assignment(client, db_session):
-    """Test that a newly created user is assigned the default role"""
-    user_data = {
-        "first_name": "Role",
-        "last_name": "Tester",
-        "email": "roletester@mail.com",
-        "password": "securepassword"
-    }
-    response = client.post("/api/v1/auth/signup", json=user_data)
-    assert response.status_code == 201
-    
-    # Verify user role in database
-    from sqlalchemy import select
-    result = await db_session.execute(select(models.User).where(models.User.email == "roletester@mail.com"))
-    user = result.scalar_one()
-    assert user.role == models.RoleEnum.manager
+    @pytest.mark.asyncio
+    async def test_user_role_assignment(self,client, db_session):
+        """Test that a newly created user is assigned the default role"""
+        user_data = {
+            "first_name": "Role",
+            "last_name": "Tester",
+            "email": "roletester@mail.com",
+            "password": "securepassword"
+        }
+        response = client.post("/api/v1/auth/signup", json=user_data)
+        assert response.status_code == 201
+        
+        # Verify user role in database
+
+        result = await db_session.execute(select(models.User).where(models.User.email == "roletester@mail.com"))
+        user = result.scalar_one()
+        assert user.role == models.RoleEnum.manager
