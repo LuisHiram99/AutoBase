@@ -25,6 +25,7 @@ class Workshop(Base):
     address = Column(String(200))
     opening_hours = Column(String(20))
     closing_hours = Column(String(20))
+    workshop_logo = Column(String(255))
 
 
 class Customer(Base):
