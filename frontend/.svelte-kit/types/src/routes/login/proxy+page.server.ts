@@ -25,7 +25,7 @@ export const load = async ({ locals, url }: Parameters<PageServerLoad>[0]) => {
 export const actions = {
   default: async ({ request, cookies }: import('./$types').RequestEvent) => {
     const formData = await request.formData();
-    const email = String(formData.get('email') ?? '');
+    const email = String(formData.get('username') ?? '');
     const password = String(formData.get('password') ?? '');
 
     if (!email || !password) {
@@ -83,4 +83,5 @@ export const actions = {
     throw redirect(303, '/');
   }
 };
+
 ;null as any as Actions;

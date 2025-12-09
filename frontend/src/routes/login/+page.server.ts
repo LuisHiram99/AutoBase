@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
   default: async ({ request, cookies }) => {
     const formData = await request.formData();
-    const email = String(formData.get('email') ?? '');
+    const email = String(formData.get('username') ?? '');
     const password = String(formData.get('password') ?? '');
 
     if (!email || !password) {
@@ -82,3 +82,4 @@ export const actions: Actions = {
     throw redirect(303, '/');
   }
 };
+
