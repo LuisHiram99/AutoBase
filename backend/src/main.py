@@ -6,6 +6,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from auth import auth
 from typing import Annotated
+from pathlib import Path  # Add this import
 
 from handler.users import users
 from handler.cars import cars
@@ -72,7 +73,12 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
-app.mount("/logos", StaticFiles(directory="logos"), name="logos")
+# Use absolute path to logos directory
+logos_path = Path(__file__).parent / "logos"
+logos_path.mkdir(exist_ok=True)  # Create if it doesn't exist
+
+app.mount("/logos", StaticFiles(directory=str(logos_path)), name="logos")
+
 
 api_route = "/api/v1"
 # Include routers
