@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from typing import List, Annotated
@@ -21,7 +21,7 @@ async def create_workshop(
     workshop: schemas.WorkshopCreate, 
     db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user)):
-    """
+    """ 
     Create a new workshop
     """
     if not is_admin(current_user):
@@ -44,6 +44,33 @@ async def read_workshops(
         return await service.get_current_user_workshop(current_user, db)
     else:
         return await service.get_all_workshops(db, current_user, skip, limit)
+    
+@router.post("/workshops/logo", response_model=schemas.Workshop)
+@limiter.limit("10/minute")
+async def upload_workshop_logo(
+    request: Request,
+    logo_file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db), 
+    current_user = Depends(get_current_user)
+):
+    """
+    Upload or update the logo of the current user's workshop
+    """
+    return await service.upload_current_user_workshop_logo(current_user, logo_file, db)
+    
+@router.get("/workshops/logo", response_model=schemas.WorkshopLogo)
+@limiter.limit("10/minute")
+async def get_workshop_logo(
+    request: Request,
+    db: AsyncSession = Depends(get_db), 
+    current_user = Depends(get_current_user)
+):
+    """
+    Get the logo of the current user's workshop
+    """
+    return await service.get_current_user_workshop_logo(current_user, db)
+
+
 
 # ---------------- Current user's workshop parts endpoint (must be before {workshop_id} routes) ----------------
 @router.post("/workshops/parts", response_model=schemas.PartWorkshop, summary="Create part for current user's workshop")
