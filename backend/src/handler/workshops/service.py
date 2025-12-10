@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
+import os
+import uuid
+from pathlib import Path
 
 from db import models, schemas
 from exceptions.exceptions import notFoundException, fetchErrorException
@@ -149,6 +152,94 @@ async def create_current_user_workshop(
     await db.commit()
     await db.refresh(db_user)
     return create_workshop_model
+
+
+async def upload_current_user_workshop_logo(
+    current_user: dict,
+    logo_file: UploadFile,
+    db: AsyncSession
+):
+    """
+    Upload or update the logo for the current logged-in user's workshop
+    Saves the file to backend/logos/ folder and stores the URL path in database
+    """
+    if get_current_user_workshop_id(current_user) == 1:
+        raise HTTPException(status_code=400, detail="User has no workshop to update")
+    
+    # Validate file type
+    allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+    file_extension = Path(logo_file.filename).suffix.lower()
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid file type. Only JPG, PNG, GIF, and WebP files are allowed."
+        )
+    
+    # Create logos directory if it doesn't exist
+    logos_dir = Path("logos")
+    logos_dir.mkdir(exist_ok=True)
+    
+    # Generate unique filename
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    file_path = logos_dir / unique_filename
+    
+    # Save file to disk
+    try:
+        content = await logo_file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+    
+    # Create URL path for database
+    logo_url = f"/logos/{unique_filename}"
+    
+    # Get and update workshop
+    result = await db.execute(
+        select(models.Workshop).filter(models.Workshop.workshop_id == current_user["workshop_id"])
+    )
+    db_workshop = result.scalars().first()
+    if not db_workshop:
+        # Clean up uploaded file if workshop not found
+        if file_path.exists():
+            file_path.unlink()
+        raise HTTPException(status_code=404, detail="Workshop not found")
+    
+    # Remove old logo file if it exists
+    if db_workshop.workshop_logo:
+        old_file_path = Path(db_workshop.workshop_logo.lstrip("/"))
+        if old_file_path.exists():
+            try:
+                old_file_path.unlink()
+            except Exception:
+                pass  # Continue even if old file deletion fails
+    
+    db_workshop.workshop_logo = logo_url
+
+    await db.commit()
+    await db.refresh(db_workshop)
+    return db_workshop
+
+
+async def get_current_user_workshop_logo(
+    current_user: dict,
+    db: AsyncSession
+):
+    """
+    Get the logo URL for the workshop associated with the current logged-in user
+    """
+    result = await db.execute(
+        select(models.Workshop).filter(models.Workshop.workshop_id == current_user["workshop_id"])
+    )
+    workshop = result.scalars().first()
+    if not workshop:
+        raise notFoundException
+    
+    return {
+        "workshop_id": workshop.workshop_id,
+        "workshop_logo": workshop.workshop_logo
+    }
+
 
 async def get_current_user_workshop(
     current_user: dict,

@@ -190,6 +190,7 @@ class WorkshopBase(BaseModel):
     address: Optional[str] = None
     opening_hours: Optional[str] = None
     closing_hours: Optional[str] = None
+    workshop_logo: Optional[str] = None
 
 
 class Workshop(WorkshopBase):
@@ -207,6 +208,17 @@ class WorkshopUpdate(BaseModel):
     address: Optional[str] = None
     opening_hours: Optional[str] = None
     closing_hours: Optional[str] = None
+
+class WorkshopLogo(BaseModel):
+    workshop_id: int
+    workshop_logo: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+class WorkshopLogoUpdate(BaseModel):
+    # This schema is not needed for file uploads since we use UploadFile
+    # But keeping it for backwards compatibility if needed elsewhere
+    workshop_logo: Optional[str] = None
 
 #---------------------- Part and PartWorkshop ----------------------
 class PartBase(BaseModel):
