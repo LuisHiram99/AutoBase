@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-
+from pydantic import BaseModel, EmailStr
 from auth.auth import get_current_user, pwd_context, admin_required
 from db import models, schemas
 from exceptions.exceptions import notFoundException, fetchErrorException

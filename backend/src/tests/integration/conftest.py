@@ -73,12 +73,11 @@ async def _setup_workshop(async_session):
     """Internal fixture to set up the default workshop once per test"""
     async with async_session() as session:
         from sqlalchemy import select
-        # Check if workshop already exists
-        result = await session.execute(select(models.Workshop).where(models.Workshop.workshop_id == 1))
+        # Check if any workshop exists (let auto-increment handle ID)
+        result = await session.execute(select(models.Workshop).limit(1))
         existing = result.scalar_one_or_none()
         if not existing:
             default_workshop = models.Workshop(
-                workshop_id=1,
                 workshop_name="Test Workshop",
                 address="123 Test St",
                 opening_hours="09:00",
@@ -86,6 +85,10 @@ async def _setup_workshop(async_session):
             )
             session.add(default_workshop)
             await session.commit()
+            await session.refresh(default_workshop)
+            return default_workshop.workshop_id
+        else:
+            return existing.workshop_id
 
 
 @pytest_asyncio.fixture(scope="function")
