@@ -16,7 +16,7 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 # ---------------- All cars endpoints ----------------
 
 @router.post("/cars/", response_model=schemas.Car)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_car(
     request: Request,
     car: schemas.CarCreate, 
@@ -29,7 +29,7 @@ async def create_car(
     return await service.create_car(car, db, current_user)
 
 @router.get("/cars/", response_model=List[schemas.Car])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_cars(
     request: Request,
     current_user: dict = Depends(get_current_user), 
@@ -43,7 +43,7 @@ async def read_cars(
 
 
 @router.get("/cars/{car_id}", response_model=schemas.Car)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_car(
     request: Request,
     car_id: int,
@@ -58,7 +58,7 @@ async def read_car(
     return await service.get_car_by_id(current_user, db, car_id)
 
 @router.put("/cars/{car_id}", response_model=schemas.Car)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_car(
     request: Request,
     car_id: int,
@@ -71,7 +71,7 @@ async def update_car(
     return await service.update_car(current_user, car_id, db, car)
 
 @router.delete("/cars/{car_id}", response_model=schemas.Car)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_car(
     request: Request,
     car_id: int,

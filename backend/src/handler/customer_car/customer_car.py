@@ -14,7 +14,7 @@ router = APIRouter()
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
 @router.post("/customer_car/", response_model=schemas.CustomerCar)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_customer_car(
     request: Request,
     customer_car: schemas.CustomerCarCreate, 
@@ -29,7 +29,7 @@ async def create_customer_car(
         return await service.create_customer_car_for_current_user_workshop(current_user, customer_car, db)
 
 @router.get("/customer_car/", response_model=List[schemas.CustomerCarWithCarInfo])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_customers_cars(
     request: Request,
     db: AsyncSession = Depends(get_db), 
@@ -46,7 +46,7 @@ async def read_customers_cars(
 
 
 @router.get("/customer_car/{customer_car_id}", response_model=schemas.CustomerCarWithCarInfo)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_customer_car(
     request: Request,
     customer_car_id: int, 
@@ -58,7 +58,7 @@ async def read_customer_car(
     return await service.get_customer_car_by_id(customer_car_id, db, current_user)
 
 @router.put("/customer_car/{customer_car_id}", response_model=schemas.CustomerCar)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_customer_car(
     request: Request,
     customer_car_id: int,
@@ -71,7 +71,7 @@ async def update_customer_car(
     return await service.update_customer_car(customer_car_id, customer_car_update, db, current_user)
 
 @router.delete("/customer_car/{customer_car_id}", response_model=schemas.CustomerCar)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_customer_car(
     request: Request,
     customer_car_id: int,

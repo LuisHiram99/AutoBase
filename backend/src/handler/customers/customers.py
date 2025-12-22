@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/customers/", response_model=schemas.Customer)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_customer(
     request: Request,
     customer: Union[schemas.CustomerCreate, schemas.CustomerCreateForWorkshop],
@@ -39,7 +39,7 @@ async def create_customer(
         return await service.create_customer(customer, db, current_user)
 
 @router.get("/customers/", response_model=List[schemas.Customer])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_customers(
     request: Request,
     skip: int = 0, 
@@ -57,7 +57,7 @@ async def read_customers(
         return await service.get_all_customers(db, current_user, skip, limit)
 
 @router.get("/customers/{customer_id}", response_model=schemas.Customer)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_customer(
     request: Request,
     customer_id: int, 
@@ -73,7 +73,7 @@ async def read_customer(
     else: return await service.get_customer_by_id(customer_id, db, current_user)
 
 @router.patch("/customers/{customer_id}", response_model=schemas.Customer)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_customer(
     request: Request,
     customer_id: int, 
@@ -112,7 +112,7 @@ async def delete_customer(
 
 
 @router.post("/customers/{customer_id}/cars", response_model=schemas.CustomerCarResponse)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def add_car_to_customer(
     request: Request,
     customer_id: int,  # Add customer_id from URL path
@@ -125,7 +125,7 @@ async def add_car_to_customer(
     return await service.assign_customer_to_car(customer_id, car_data, db, current_user)
 
 @router.get("/customers/{customer_id}/cars", response_model=List[schemas.CustomerCarWithCarInfo])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def get_customer_cars(
     request: Request,
     customer_id: int, 

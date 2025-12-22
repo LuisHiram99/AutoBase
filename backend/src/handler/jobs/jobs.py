@@ -17,7 +17,7 @@ router = APIRouter()
 
 # ---------------- Jobs endpoints ----------------
 @router.post('/jobs/', response_model=schemas.Job)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_job(
     request: Request,
     job: schemas.JobCreateForWorkshop,
@@ -27,7 +27,7 @@ async def create_job(
     return await service.create_job_for_current_user_workshop(current_user, job, db)
 
 @router.get('/jobs/', response_model=List[schemas.JobWithCarInfo])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_jobs(
     request: Request,
     db: AsyncSession = Depends(get_db),
@@ -38,7 +38,7 @@ async def read_jobs(
     return await service.get_all_jobs_for_current_user_workshop(db, current_user, skip, limit)
 
 @router.get("/jobs/{job_id}", response_model=schemas.JobWithCarInfo)
-@limiter.limit('10/minute')
+@limiter.limit('15/minute')
 async def read_job_by_id(
     request: Request,
     job_id: int,
@@ -49,7 +49,7 @@ async def read_job_by_id(
     return await service.get_job_by_id(job_id, current_user, db)
 
 @router.patch('/jobs/{job_id}', response_model=schemas.Job)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_job(
     request: Request,
     job_id: int,
@@ -60,7 +60,7 @@ async def update_job(
     return await service.update_job_info(job_id, job_update, current_user, db)
 
 @router.delete('/jobs/{job_id}', response_model=dict)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_job(
     request: Request,
     job_id: int,
