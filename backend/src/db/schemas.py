@@ -19,7 +19,7 @@ class CustomerBase(BaseModel):
     first_name: str
     last_name: str
     phone: str
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     workshop_id: int
 
 class Customer(CustomerBase):
@@ -38,7 +38,7 @@ class CustomerUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     workshop_id: Optional[int] = None
 
 class CustomerCreateForWorkshop(BaseModel):
