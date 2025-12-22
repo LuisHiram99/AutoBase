@@ -15,7 +15,7 @@ router = APIRouter()
 
 # ---------------- All workshop endpoints ----------------
 @router.post("/workshops/", response_model=schemas.Workshop, summary="Create new Workshop")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_workshop( 
     request: Request,
     workshop: schemas.WorkshopCreate, 
@@ -30,7 +30,7 @@ async def create_workshop(
         return await service.create_workshop(workshop, db, current_user)
 
 @router.get("/workshops/", response_model=List[schemas.Workshop])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_workshops(
     request: Request,
     db: AsyncSession = Depends(get_db), 
@@ -46,7 +46,7 @@ async def read_workshops(
         return await service.get_all_workshops(db, current_user, skip, limit)
     
 @router.post("/workshops/logo", response_model=schemas.Workshop)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def upload_workshop_logo(
     request: Request,
     logo_file: UploadFile = File(...),
@@ -59,7 +59,7 @@ async def upload_workshop_logo(
     return await service.upload_current_user_workshop_logo(current_user, logo_file, db)
     
 @router.get("/workshops/logo", response_model=schemas.WorkshopLogo)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def get_workshop_logo(
     request: Request,
     db: AsyncSession = Depends(get_db), 
@@ -74,7 +74,7 @@ async def get_workshop_logo(
 
 # ---------------- Current user's workshop parts endpoint (must be before {workshop_id} routes) ----------------
 @router.post("/workshops/parts", response_model=schemas.PartWorkshop, summary="Create part for current user's workshop")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_current_user_workshop_part(
     request: Request,
     part: schemas.PartWorkshopCreate,
@@ -88,7 +88,7 @@ async def create_current_user_workshop_part(
     return await service.create_current_user_workshop_part(user, part, db)
 
 @router.get("/workshops/parts", response_model=List[schemas.PartWorkshop], summary="Get parts of current user's workshop")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_current_user_workshop_parts(
     request: Request,
     user = Depends(get_current_user),
@@ -100,7 +100,7 @@ async def read_current_user_workshop_parts(
     return await service.get_current_user_workshop_parts(user, db)
 
 @router.patch("/workshops/parts/{part_id}", response_model=schemas.PartWorkshop, summary="Update part of current user's workshop")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_current_user_workshop_part(
     request: Request,
     part_id: int,
@@ -114,7 +114,7 @@ async def update_current_user_workshop_part(
     return await service.update_current_user_workshop_part(user, part_id, part_update, db)
 
 @router.delete("/workshops/parts/{part_id}", response_model=schemas.PartWorkshop, summary="Delete part of current user's workshop")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_current_user_workshop_part(
     request: Request,
     part_id: int,
@@ -128,7 +128,7 @@ async def delete_current_user_workshop_part(
 
     
 @router.patch("/workshops/me", response_model=schemas.Workshop)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_current_user_workshop(
     request: Request,
     workshop_update: schemas.WorkshopUpdate, 
@@ -141,7 +141,7 @@ async def update_current_user_workshop(
     return await service.patch_current_user_workshop(current_user, workshop_update, db)
 
 @router.get("/workshops/{workshop_id}", response_model=schemas.Workshop)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_workshop(
     request: Request,
     workshop_id: int, 
@@ -153,7 +153,7 @@ async def read_workshop(
     return await service.get_workshop_by_id(workshop_id, db, current_user)
 
 @router.patch("/workshops/{workshop_id}", response_model=schemas.Workshop)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_workshop(
     request: Request,
     workshop_id: int, 
@@ -167,7 +167,7 @@ async def update_workshop(
     return await service.update_workshop(workshop_id, workshop_update, db, current_user)
 
 @router.delete("/workshops/{workshop_id}", response_model=schemas.Workshop)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_workshop(
     request: Request,
     workshop_id: int, 

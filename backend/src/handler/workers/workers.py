@@ -17,7 +17,7 @@ router = APIRouter()
 
 # ---------------- Workers endpoints ----------------
 @router.post('/workers/', response_model=schemas.Worker)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_worker(
     request: Request,
     worker: schemas.WorkerCreateForWorkshop,
@@ -27,7 +27,7 @@ async def create_worker(
     return await service.add_worker_to_current_user_workshop(current_user, worker, db)
 
 @router.get('/workers/', response_model=List[schemas.Worker])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_workers(
     request: Request,
     db: AsyncSession = Depends(get_db),
@@ -38,7 +38,7 @@ async def read_workers(
     return await service.get_all_workers_for_current_user_workshop(db, current_user, skip, limit)
 
 @router.get("/workers/{worker_id}", response_model=schemas.Worker)
-@limiter.limit('10/minute')
+@limiter.limit('15/minute')
 async def read_worker_by_id(
     request: Request,
     worker_id: int,
@@ -51,7 +51,7 @@ async def read_worker_by_id(
 
 
 @router.patch('/workers/{worker_id}', response_model=schemas.Worker)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_worker(
     request: Request,
     worker_id: int,
@@ -62,7 +62,7 @@ async def update_worker(
     return await service.update_worker_info(worker_id, worker_update, current_user, db)
 
 @router.delete('/workers/{worker_id}', response_model=schemas.Worker)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_worker(
     request: Request,
     worker_id: int,

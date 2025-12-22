@@ -15,7 +15,7 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # ---------------- All parts endpointsasdasd ----------------
 @router.post("/parts/", response_model=schemas.Part)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def create_part(
     request: Request,
     part: schemas.PartCreate, 
@@ -28,7 +28,7 @@ async def create_part(
     return await service.create_part(part, db, current_user)
 
 @router.get("/parts/", response_model=List[schemas.Part])
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_parts(
     request: Request,
     current_user: dict = Depends(get_current_user), 
@@ -41,7 +41,7 @@ async def read_parts(
     return await service.get_all_parts(current_user, db, skip, limit)
 
 @router.get("/parts/{part_id}", response_model=schemas.Part)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_part(
     request: Request,
     part_id: int,
@@ -53,7 +53,7 @@ async def read_part(
     return await service.get_part_by_id(current_user, db, part_id)
 
 @router.patch("/parts/{part_id}", response_model=schemas.Part)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_part(
     request: Request,
     part_id: int,
@@ -66,7 +66,7 @@ async def update_part(
     return await service.update_part(current_user, part_id, db, part_update)
 
 @router.delete("/parts/{part_id}", response_model=schemas.Part)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_part(
     request: Request,
     part_id: int,

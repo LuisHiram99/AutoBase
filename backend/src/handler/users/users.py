@@ -18,7 +18,7 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 # ---------------- All user endpoints ----------------
 
 @router.get("/users/", response_model=List[schemas.User], summary="Get all users")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_users(
     request: Request,
     user = Depends(admin_required), 
@@ -31,7 +31,7 @@ async def read_users(
     return await service.get_all_users(user, db, skip, limit)
 
 @router.get("/users/{user_id}", response_model=schemas.User, summary="Get user by ID")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def read_user(
     request: Request,
     user_id: int, 
@@ -43,7 +43,7 @@ async def read_user(
     return await service.get_user_by_id(user, db, user_id)
 
 @router.put("/users/{user_id}", response_model=schemas.User, summary="Update user by ID")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def update_user(
     request: Request,
     user_id: int,
@@ -56,7 +56,7 @@ async def update_user(
     return await service.update_user(current_user, user_id, db, user_update)
 
 @router.delete("/users/{user_id}", response_model=schemas.User, summary="Delete user by ID")
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def delete_user(
     request: Request,
     user_id: int, 
