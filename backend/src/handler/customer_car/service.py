@@ -183,8 +183,18 @@ async def update_customer_car(
     Construct a query to update a customer_car's information
     '''
     try:
-        customer_car_data = await get_customer_car_by_id(customer_car_id, db, current_user)
-            # Prepare update data
+        # Check if customer_car exists first
+        customer_car_exists = await get_customer_car_by_id(customer_car_id, db, current_user)
+        
+        # Get the actual SQLAlchemy model for updating
+        result = await db.execute(
+            select(models.CustomerCar).where(models.CustomerCar.customer_car_id == customer_car_id)
+        )
+        customer_car_model = result.scalar_one_or_none()
+        if customer_car_model is None:
+            raise notFoundException
+            
+        # Prepare update data
         update_data = customer_car_update.model_dump(exclude_unset=True)
 
         if "customer_id" in update_data:
@@ -197,13 +207,13 @@ async def update_customer_car(
             if car_res.scalar_one_or_none() is None:
                 raise HTTPException(status_code=404, detail="Car not found")
 
-        # Update other fields
+        # Update the SQLAlchemy model fields
         for field, value in update_data.items():
-            setattr(customer_car_data, field, value)
+            setattr(customer_car_model, field, value)
         # Commit the transaction
         await db.commit()
-        await db.refresh(customer_car_data)
-        return customer_car_data
+        await db.refresh(customer_car_model)
+        return customer_car_model
     except HTTPException:
         raise
     except Exception as e:
