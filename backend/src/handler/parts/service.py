@@ -12,10 +12,28 @@ async def create_part(part: schemas.PartCreate, db: AsyncSession, current_user: 
     '''
     try:
         db_part = models.Part(**part.model_dump())
+        # Check for empty required fields
+        if not db_part.part_name or not db_part.part_name.strip():
+            raise HTTPException(status_code=422, detail="Part name cannot be empty")
+        if not db_part.brand or not db_part.brand.strip():
+            raise HTTPException(status_code=422, detail="Brand cannot be empty")
+        
+        # check for valid lenghth
+        if len(db_part.part_name) > 100:
+            raise HTTPException(status_code=422, detail="Part name exceeds maximum length of 100 characters")
+        if len(db_part.brand) > 100:
+            raise HTTPException(status_code=422, detail="Brand exceeds maximum length of 100 characters")
+        if db_part.description and len(db_part.description) > 255:
+            raise HTTPException(status_code=422, detail="Description exceeds maximum length of 255 characters")
+        if db_part.category and len(db_part.category) > 100:
+            raise HTTPException(status_code=422, detail="Category exceeds maximum length of 100 characters")
+
         db.add(db_part)
         await db.commit()
         await db.refresh(db_part)
         return db_part
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Database error in create_part: {e}")
         raise fetchErrorException
