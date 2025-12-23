@@ -8,6 +8,23 @@ from pathlib import Path
 from db import models, schemas
 from exceptions.exceptions import notFoundException, fetchErrorException
 
+
+def validate_workshop_fields(workshop: schemas.WorkshopCreate | schemas.WorkshopUpdate):
+    """
+    Validate required fields for creating or updating a workshop
+    """
+    if not workshop.workshop_name or not workshop.workshop_name.strip():
+        raise HTTPException(status_code=422, detail="Workshop name cannot be empty")
+    if workshop.workshop_name and len(workshop.workshop_name) > 100:
+        raise HTTPException(status_code=422, detail="Workshop name exceeds maximum length of 100 characters")
+    if workshop.address and len(workshop.address) > 200:
+        raise HTTPException(status_code=422, detail="Address exceeds maximum length of 200 characters")
+    if workshop.opening_hours and len(workshop.opening_hours) > 50:
+        raise HTTPException(status_code=422, detail="Opening hours exceeds maximum length of 50 characters")
+    if workshop.closing_hours and len(workshop.closing_hours) > 50:
+        raise HTTPException(status_code=422, detail="Closing hours exceeds maximum length of 50 characters")    
+
+
 # ---------------- All workshops functions (ADMIN REQUIRED)----------------
 async def create_workshop(
         workshop: schemas.WorkshopCreate,
@@ -17,12 +34,14 @@ async def create_workshop(
     Construct a query to create a new workshop
     '''
     try:
+        validate_workshop_fields(workshop)
         db_workshop = models.Workshop(**workshop.model_dump())
-
         db.add(db_workshop)
         await db.commit()
         await db.refresh(db_workshop)
         return db_workshop
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Database error in create_workshop: {e}")
         raise fetchErrorException
@@ -61,6 +80,8 @@ async def get_workshop_by_id(
         if db_workshop is None:
             raise notFoundException
         return db_workshop
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Database error in get_workshop_by_id: {e}")
         raise fetchErrorException
@@ -75,6 +96,8 @@ async def update_workshop(
     '''
     try:
         workshop_data = await get_workshop_by_id(workshop_id, db, current_user)
+        if workshop_data is None:
+            raise notFoundException
             # Prepare update data
         update_data = workshop_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -98,7 +121,8 @@ async def delete_workshop(
     '''
     try:
         workshop_data = await get_workshop_by_id(workshop_id, db, current_user)
-
+        if workshop_data is None:
+            raise notFoundException
         await db.execute(
             delete(models.Workshop).where(models.Workshop.workshop_id == workshop_id)
         )
@@ -127,31 +151,38 @@ async def create_current_user_workshop(
     """
     Create a workshop for the current logged-in user
     """
-    if get_current_user_workshop_id(current_user) != 1:
-        raise HTTPException(status_code=400, detail="User already has a workshop")
-    
-    create_workshop_model = models.Workshop(
-        workshop_name=workshop.workshop_name,
-        address=workshop.address,
-        opening_hours=workshop.opening_hours,
-        closing_hours=workshop.closing_hours
-    )
-    db.add(create_workshop_model)
-    await db.commit()
-    await db.refresh(create_workshop_model)
+    try: 
+        validate_workshop_fields(workshop)
+        if get_current_user_workshop_id(current_user) != 1:
+            raise HTTPException(status_code=400, detail="User already has a workshop")
+        
+        create_workshop_model = models.Workshop(
+            workshop_name=workshop.workshop_name,
+            address=workshop.address,
+            opening_hours=workshop.opening_hours,
+            closing_hours=workshop.closing_hours
+        )
+        db.add(create_workshop_model)
+        await db.commit()
+        await db.refresh(create_workshop_model)
 
-    # Update user's workshop_id
-    result = await db.execute(
-        select(models.User).filter(models.User.user_id == current_user["user_id"])
-    )
-    db_user = result.scalar_one_or_none()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        # Update user's workshop_id
+        result = await db.execute(
+            select(models.User).filter(models.User.user_id == current_user["user_id"])
+        )
+        db_user = result.scalar_one_or_none()
+        if db_user is None:
+            raise HTTPException(status_code=404, detail="User not found")
 
-    db_user.workshop_id = create_workshop_model.workshop_id
-    await db.commit()
-    await db.refresh(db_user)
-    return create_workshop_model
+        db_user.workshop_id = create_workshop_model.workshop_id
+        await db.commit()
+        await db.refresh(db_user)
+        return create_workshop_model
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Database error in create_current_user_workshop: {e}")
+        raise fetchErrorException
 
 
 async def upload_current_user_workshop_logo(
@@ -274,6 +305,7 @@ async def patch_current_user_workshop(
     if not db_workshop:
         raise HTTPException(status_code=404, detail="Workshop not found")
     
+    validate_workshop_fields(workshop_update)
     update_data = workshop_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_workshop, field, value)
