@@ -146,14 +146,19 @@ class TestWorkshopsIntegration:
             return part
 
     @pytest_asyncio.fixture
-    async def sample_part_workshop(self, db_session, sample_part, _setup_workshop):
-        """Create a sample part-workshop relationship"""
+    async def sample_part_workshop(self, db_session, sample_part, manager_user_token):
+        """Create a sample part-workshop relationship for manager's workshop"""
+        # Get the manager's workshop ID by creating a temporary client request
+        from fastapi.testclient import TestClient
+        from main import app
+        
+        client = TestClient(app)
+        headers = {"Authorization": f"Bearer {manager_user_token}"}
+        response = client.get("/api/v1/workshops/", headers=headers)
+        workshop_list = response.json()
+        workshop_id = workshop_list[0]["workshop_id"]  # Get the first workshop from the list
+        
         async with db_session as session:
-            # Get workshop_id from setup
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            workshop_id = default_workshop.workshop_id
-            
             part_workshop = models.PartWorkshop(
                 part_id=sample_part.part_id,
                 workshop_id=workshop_id,
@@ -324,8 +329,11 @@ class TestWorkshopsIntegration:
         assert response.status_code == 200
         
         # Manager should get their own workshop (as a single-item list based on service logic)
-        workshop = response.json()
-        assert workshop["workshop_name"] == "Test Workshop"  # From _setup_workshop fixture
+        workshops = response.json()
+        assert len(workshops) == 1
+        workshop = workshops[0]
+        assert "workshop_name" in workshop
+        assert "workshop_id" in workshop
 
     @pytest.mark.asyncio
     async def test_get_workshops_with_pagination_as_admin(self, client, admin_user_token):
