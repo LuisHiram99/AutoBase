@@ -25,6 +25,14 @@ async def add_worker_to_current_user_workshop(
     """
     Add a worker to the current logged-in user's workshop
     """
+    # Validate required fields are not empty
+    if not worker.first_name or not worker.first_name.strip():
+        raise HTTPException(status_code=422, detail="First name cannot be empty")
+    if not worker.last_name or not worker.last_name.strip():
+        raise HTTPException(status_code=422, detail="Last name cannot be empty")
+    if not worker.position or not worker.position.strip():
+        raise HTTPException(status_code=422, detail="Position cannot be empty")
+    
     workshop_id = get_current_user_workshop_id(current_user)
     create_worker_model = models.Worker(
         first_name=worker.first_name,
@@ -109,7 +117,7 @@ async def update_worker_info(
         )
         db_worker = result.scalars().first()
         if not db_worker:
-            raise notFoundException("Worker not found")
+            raise notFoundException
 
         update_data = worker_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
