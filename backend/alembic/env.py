@@ -37,17 +37,34 @@ try:
         env_path = Path(__file__).resolve().parents[1] / 'config' / '.env'
     
     load_dotenv(dotenv_path=env_path)
-    DB_USER = os.getenv('DB_USER')
-    DB_PASSWORD = os.getenv('DB_PASSWORD')
-    DB_HOST = os.getenv('DB_HOST', 'localhost')
-    DB_PORT = os.getenv('DB_PORT', '5432')
-    DB_NAME = os.getenv('DB_NAME')
-    if DB_USER and DB_PASSWORD and DB_NAME:
-        # Use sync psycopg2 driver for Alembic/SQLAlchemy Engine
-        db_url = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    
+    # Check for DATABASE_URL first (Railway provides this)
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        # Convert async URL to sync for Alembic
+        if 'postgresql+asyncpg://' in database_url:
+            db_url = database_url.replace('postgresql+asyncpg://', 'postgresql+psycopg2://')
+        elif database_url.startswith('postgres://'):
+            db_url = database_url.replace('postgres://', 'postgresql+psycopg2://', 1)
+        elif database_url.startswith('postgresql://'):
+            db_url = database_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
+        else:
+            db_url = database_url
         config.set_main_option('sqlalchemy.url', db_url)
-except Exception:
+    else:
+        # Fallback to individual environment variables
+        DB_USER = os.getenv('DB_USER')
+        DB_PASSWORD = os.getenv('DB_PASSWORD')
+        DB_HOST = os.getenv('DB_HOST', 'localhost')
+        DB_PORT = os.getenv('DB_PORT', '5432')
+        DB_NAME = os.getenv('DB_NAME')
+        if DB_USER and DB_PASSWORD and DB_NAME:
+            # Use sync psycopg2 driver for Alembic/SQLAlchemy Engine
+            db_url = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+            config.set_main_option('sqlalchemy.url', db_url)
+except Exception as e:
     # If anything fails, fall back to the value already present in alembic.ini
+    print(f"Warning: Could not load database configuration: {e}")
     pass
 
 # Interpret the config file for Python logging.
