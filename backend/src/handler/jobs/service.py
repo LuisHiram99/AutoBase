@@ -15,6 +15,26 @@ from db.database import get_db
 
 router = APIRouter(tags=["workers"])
 
+def validate_job_fields(job: schemas.JobCreateForWorkshop | schemas.JobUpdate):
+    """
+    Validate required fields for creating or updating a job
+    """
+    if isinstance(job, schemas.JobCreateForWorkshop):
+        if not job.invoice or not job.invoice.strip():
+            raise HTTPException(status_code=422, detail="Invoice cannot be empty")
+        if len(job.invoice) > 50:
+            raise HTTPException(status_code=422, detail="Invoice exceeds maximum length of 50 characters")
+        if job.service_description and len(job.service_description) > 255:
+            raise HTTPException(status_code=422, detail="Service description exceeds maximum length of 255 characters")
+    elif isinstance(job, schemas.JobUpdate):
+        if job.invoice is not None:
+            if not job.invoice.strip():
+                raise HTTPException(status_code=422, detail="Invoice cannot be empty")
+            if len(job.invoice) > 50:
+                raise HTTPException(status_code=422, detail="Invoice exceeds maximum length of 50 characters")
+        if job.service_description is not None and len(job.service_description) > 255:
+            raise HTTPException(status_code=422, detail="Service description exceeds maximum length of 255 characters")
+
 # ---------------- BEGIN Jobs info functions ----------------
 async def create_job_for_current_user_workshop(
     current_user: dict,
@@ -24,37 +44,45 @@ async def create_job_for_current_user_workshop(
     """
     Create a job for the current logged-in user's workshop
     """
-    workshop_id = get_current_user_workshop_id(current_user)
-    
-    # Validate that customer_car exists and belongs to a customer in the user's workshop
-    result = await db.execute(
-        select(models.CustomerCar, models.Customer)
-        .join(models.Customer, models.CustomerCar.customer_id == models.Customer.customer_id)
-        .where(models.CustomerCar.customer_car_id == job.customer_car_id)
-        .where(models.Customer.workshop_id == workshop_id)
-    )
-    customer_car_data = result.first()
-    
-    if not customer_car_data:
-        raise HTTPException(
-            status_code=404, 
-            detail="Customer car not found in your workshop"
-        )
-    
-    create_job_model = models.Job(
-        customer_car_id=job.customer_car_id,
-        invoice=job.invoice,
-        service_description=job.service_description,
-        start_date=job.start_date,
-        end_date=job.end_date,
-        status=job.status,
-        workshop_id=workshop_id  # Set automatically from user's workshop
-    )
+    try:
+        validate_job_fields(job)
 
-    db.add(create_job_model)
-    await db.commit()
-    await db.refresh(create_job_model)
-    return create_job_model
+        workshop_id = get_current_user_workshop_id(current_user)
+
+        # Validate that customer_car exists and belongs to a customer in the user's workshop
+        result = await db.execute(
+            select(models.CustomerCar, models.Customer)
+            .join(models.Customer, models.CustomerCar.customer_id == models.Customer.customer_id)
+            .where(models.CustomerCar.customer_car_id == job.customer_car_id)
+            .where(models.Customer.workshop_id == workshop_id)
+        )
+        customer_car_data = result.first()
+        
+        if not customer_car_data:
+            raise HTTPException(
+                status_code=404, 
+                detail="Customer car not found in your workshop"
+            )
+        
+        create_job_model = models.Job(
+            customer_car_id=job.customer_car_id,
+            invoice=job.invoice,
+            service_description=job.service_description,
+            start_date=job.start_date,
+            end_date=job.end_date,
+            status=job.status,
+            workshop_id=workshop_id  # Set automatically from user's workshop
+        )
+
+        db.add(create_job_model)
+        await db.commit()
+        await db.refresh(create_job_model)
+        return create_job_model
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Database error in create_job_for_current_user_workshop: {e}")
+        raise fetchErrorException
 
 async def get_all_jobs_for_current_user_workshop(
         db: AsyncSession, 
@@ -166,6 +194,7 @@ async def update_job_info(
     Update a job's information for the current user's workshop
     """
     try:
+        validate_job_fields(job_update)
         workshop_id = get_current_user_workshop_id(current_user)
         result = await db.execute(
             select(models.Job).where(
