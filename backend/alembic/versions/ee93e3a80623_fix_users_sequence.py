@@ -19,9 +19,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Fix users sequence to be in sync with existing data."""
-    # Reset the sequence to be higher than the current max user_id
+    """Fix all sequences to be in sync with existing data."""
+    # Reset all sequences to be higher than the current max id values
     op.execute("SELECT setval('users_user_id_seq', (SELECT COALESCE(MAX(user_id), 0) + 1 FROM users));")
+    op.execute("SELECT setval('workshops_workshop_id_seq', (SELECT COALESCE(MAX(workshop_id), 0) + 1 FROM workshops));")
+    op.execute("SELECT setval('customers_customer_id_seq', (SELECT COALESCE(MAX(customer_id), 0) + 1 FROM customers));")
+    op.execute("SELECT setval('workers_worker_id_seq', (SELECT COALESCE(MAX(worker_id), 0) + 1 FROM workers));")
+    op.execute("SELECT setval('cars_car_id_seq', (SELECT COALESCE(MAX(car_id), 0) + 1 FROM cars));")
+    op.execute("SELECT setval('customer_car_customer_car_id_seq', (SELECT COALESCE(MAX(customer_car_id), 0) + 1 FROM customer_car));")
+    op.execute("SELECT setval('parts_part_id_seq', (SELECT COALESCE(MAX(part_id), 0) + 1 FROM parts));")
+    op.execute("SELECT setval('jobs_job_id_seq', (SELECT COALESCE(MAX(job_id), 0) + 1 FROM jobs));")
 
 
 def downgrade() -> None:

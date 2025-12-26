@@ -20,7 +20,7 @@ class StatusEnum(enum.Enum):
 class Workshop(Base):
     __tablename__ = "workshops"
 
-    workshop_id = Column(Integer, primary_key=True, index=True)
+    workshop_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     workshop_name = Column(String(100), nullable=False)
     address = Column(String(200))
     opening_hours = Column(String(20))
@@ -31,7 +31,7 @@ class Workshop(Base):
 class Customer(Base):
     __tablename__ = "customers"
 
-    customer_id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now(), server_default=func.now())
     first_name = Column(String(100), nullable=False)
@@ -76,7 +76,7 @@ class Worker(Base):
 class Car(Base):
     __tablename__ = "cars"
 
-    car_id = Column(Integer, primary_key=True, index=True)
+    car_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now(), server_default=func.now())
     year = Column(Integer, nullable=False)
@@ -87,7 +87,7 @@ class Car(Base):
 class CustomerCar(Base):
     __tablename__ = "customer_car"
 
-    customer_car_id = Column(Integer, primary_key=True, index=True)
+    customer_car_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False)
     car_id = Column(Integer, ForeignKey("cars.car_id"), nullable=False)
     license_plate = Column(String(20), nullable=False)
@@ -97,7 +97,7 @@ class CustomerCar(Base):
 class Part(Base):
     __tablename__ = "parts"
 
-    part_id = Column(Integer, primary_key=True, index=True)
+    part_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     part_name = Column(String(100), nullable=False)
     brand = Column(String(100), nullable=False)
     description = Column(String(255))
@@ -132,7 +132,7 @@ class PartCar(Base):
 class Job(Base):
     __tablename__ = "jobs"
 
-    job_id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     workshop_id = Column(Integer, ForeignKey("workshops.workshop_id"), nullable=False)
     customer_car_id = Column(Integer, ForeignKey("customer_car.customer_car_id"), nullable=False)
 
