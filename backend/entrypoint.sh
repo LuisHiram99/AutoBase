@@ -6,7 +6,13 @@ echo "Starting backend..."
 # Wait for database to be available (optional health check)
 if [ -n "$DATABASE_URL" ]; then
     echo "Checking database connection..."
-    # Simple connection test - modify as needed for your setup
+    # Ensure DATABASE_URL uses asyncpg driver
+    if echo "$DATABASE_URL" | grep -q "^postgres://"; then
+        export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's|^postgres://|postgresql+asyncpg://|')
+    elif echo "$DATABASE_URL" | grep -q "^postgresql://"; then
+        export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's|^postgresql://|postgresql+asyncpg://|')
+    fi
+    echo "Using DATABASE_URL with asyncpg driver"
 fi
 
 echo "Running database migrations..."
