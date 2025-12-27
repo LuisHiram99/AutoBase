@@ -18,6 +18,7 @@ from handler.rate_limiter import limiter
 from handler.parts import parts
 from handler.workers import workers
 from handler.jobs import jobs
+from handler import logger
 
 
 description = """
