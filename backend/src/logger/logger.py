@@ -14,9 +14,6 @@ try:
         # Fallback for local development
         # Go up 2 levels: logger -> src -> backend, then add config/.env
         env_path = Path(__file__).resolve().parents[2] / 'config' / '.env'
-    
-    print(f"Looking for .env file at: {env_path}")
-    print(f".env file exists: {env_path.exists()}")
     load_dotenv(dotenv_path=env_path)
 except Exception as e:
     print(f"Error loading .env file: {e}", file=sys.stderr)
@@ -24,9 +21,10 @@ except Exception as e:
 environment = os.getenv("ENVIRONMENT", "development").lower()
 log_level = "DEBUG" if environment == "development" else "INFO"
 logs_source_token = os.getenv("LOGS_SOURCE_TOKEN", "")
-handler = LogtailHandler(source_token=str(logs_source_token), host="s1653917.eu-nbg-2.betterstackdata.com")
 
-print(f"LOGS_SOURCE_TOKEN: {logs_source_token}")
+# Create logs directory if it doesn't exist
+logs_dir = Path(__file__).parent / "logs"
+logs_dir.mkdir(exist_ok=True)
 
 # Configure Loguru logger
 logger.remove()
@@ -36,12 +34,22 @@ logger.add(
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
     level=log_level
 )
-
 logger.add(
-    handler,
+    str(logs_dir / "app.log"),
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-    level="DEBUG"
+    level=log_level,
+    rotation="10 seconds",
+    retention="5 seconds"
 )
+
+if logs_source_token:
+    handler = LogtailHandler(source_token=logs_source_token, host=os.getenv("LOGS_SOURCE_HOST"))
+    logger.add(
+        handler,
+        level=log_level,
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+        serialize=True
+    )
 
 
 
