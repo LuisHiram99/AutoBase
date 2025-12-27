@@ -18,7 +18,7 @@ from handler.rate_limiter import limiter
 from handler.parts import parts
 from handler.workers import workers
 from handler.jobs import jobs
-from handler import logger
+from backend.src.logger import logger
 
 
 description = """
@@ -97,3 +97,7 @@ app.include_router(jobs.router, prefix=api_route, tags=["jobs"])
 @app.get("/")
 async def root():
     return {"message": "Welcome to AutoBase API"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
