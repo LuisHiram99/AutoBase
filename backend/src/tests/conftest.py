@@ -17,8 +17,8 @@ env_path = Path(__file__).parent.parent.parent / 'config' / '.env'
 load_dotenv(dotenv_path=env_path)
 
 # Build test database URL from environment variables
-DB_USER = os.getenv("DB_USER", "luishernandez")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "luishernandez")
+DB_USER = os.getenv("DB_USER", "postgres")  # Changed from "luishernandez"
+DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")  # Changed from "luishernandez"
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME_TEST = os.getenv("DB_NAME_TEST", "talleres_test_db")  # Use separate test DB name
