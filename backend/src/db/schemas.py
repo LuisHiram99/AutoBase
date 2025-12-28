@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from enum import Enum
 
@@ -81,10 +81,10 @@ class User(UserBase):
     }
 
 class UserCreate(BaseModel):
-    first_name: str
-    last_name: str
-    email: Optional[EmailStr] = None
-    password: str  # plain password for creation; will be hashed in the handler
+    first_name: str = Field(..., example="John", min_length=2, max_length=100)
+    last_name: str = Field(..., example="Doe", min_length=2, max_length=100)
+    email: EmailStr = Field(..., example="john@example.com", max_length=100)
+    password: str = Field(..., example="Secretpassword12!", min_length=10, max_length=100)
     role: RoleEnum
     workshop_id: int
 
@@ -92,28 +92,91 @@ class UserCreate(BaseModel):
         "first_name": "John",
         "last_name": "Doe",
         "email": "john@example.com",
-        "password": "secretpassword",
+        "password": "Secretpassword1!",
         "role": "admin",
         "workshop_id": 1
     }}}
 
+
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password_complexity(cls, v):
+        if v is None:
+            return v
+        
+        errors = []
+        if not any(c.isupper() for c in v):
+            errors.append('uppercase letter')
+        if not any(c.islower() for c in v):
+            errors.append('lowercase letter')
+        if not any(c.isdigit() for c in v):
+            errors.append('number')
+        if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in v):
+            errors.append('special character')
+        
+        if errors:
+            raise ValueError(f"Password must contain: {', '.join(errors)}")
+        return v
+
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None
+    first_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    last_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    email: Optional[EmailStr] = Field(None, max_length=100)
+    password: Optional[str] = Field(None, min_length=10, max_length=100)
+
     role: Optional[RoleEnum] = None
     workshop_id: Optional[int] = None
 
+    @field_validator('password')
+    @classmethod
+    def validate_password_complexity(cls, v):
+        if v is None:
+            return v
+        
+        errors = []
+        if not any(c.isupper() for c in v):
+            errors.append('uppercase letter')
+        if not any(c.islower() for c in v):
+            errors.append('lowercase letter')
+        if not any(c.isdigit() for c in v):
+            errors.append('number')
+        if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in v):
+            errors.append('special character')
+        
+        if errors:
+            raise ValueError(f"Password must contain: {', '.join(errors)}")
+        return v
+
 class CurrentUserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    first_name: Optional[str] = Field(None, example="John", min_length=2, max_length=100)
+    last_name: Optional[str] = Field(None, example="Doe", min_length=2, max_length=100)
+    email: Optional[EmailStr] = Field(None, example="john@example.com", max_length=100)
 
 class CurrentUserPassword(BaseModel):
-    old_password: str
-    new_password: str
+    old_password: str = Field(..., example="Oldpassword1!", min_length=10, max_length=100)
+    new_password: str = Field(..., example="Newpassword1!", min_length=10, max_length=100)
 
+    @field_validator('new_password')
+    @classmethod
+    def validate_password_complexity(cls, v):
+        if v is None:
+            return v
+        
+        errors = []
+        if not any(c.isupper() for c in v):
+            errors.append('uppercase letter')
+        if not any(c.islower() for c in v):
+            errors.append('lowercase letter')
+        if not any(c.isdigit() for c in v):
+            errors.append('number')
+        if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in v):
+            errors.append('special character')
+        
+        if errors:
+            raise ValueError(f"Password must contain: {', '.join(errors)}")
+        return v
+    
 # --------------------- Car and CustomerCar ----------------------
 
 

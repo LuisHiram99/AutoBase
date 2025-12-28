@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
@@ -38,10 +38,21 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 class CreateUserRequest(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr
-    password: str
+    first_name: str = Field(..., example="John", min_length=2, max_length=100)
+    last_name: str = Field(..., example="Doe", min_length=2, max_length=100)
+    email: EmailStr = Field(..., example="john@example.com", max_length=100)
+    password: str = Field(..., example="Secretpassword1!", min_length=10, max_length=100)
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_complexity(cls, v):
+        if not any(c.isupper() for c in v):
+            raise ValueError('Must contain uppercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Must contain number')
+        if not any(c in '!@#$%^&*' for c in v):
+            raise ValueError('Must contain special character')
+        return v
 
 class Token(BaseModel):
     access_token: str

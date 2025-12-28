@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from datetime import datetime
@@ -6,22 +6,21 @@ from logger.logger import get_logger
 
 from auth.auth import get_current_user, pwd_context, admin_required
 from db import models, schemas
-from exceptions.exceptions import notFoundException, fetchErrorException
 
 def validate_car_creation(car: schemas.CarCreate):
     '''
     Validate car fields before database operations
     '''
     if car.year < 1900 or car.year > datetime.now().year + 1:
-        raise HTTPException(status_code=400, detail="Invalid year for car")
+        raise HTTPException(status_code=422, detail="Invalid year for car")
     if not car.brand or car.brand.strip() == "":
-        raise HTTPException(status_code=400, detail="Brand cannot be empty")
+        raise HTTPException(status_code=422, detail="Brand cannot be empty")
     if len(car.brand) > 100:
-        raise HTTPException(status_code=400, detail="Brand name too long")
+        raise HTTPException(status_code=422, detail="Brand name too long")
     if not car.model or car.model.strip() == "":
-        raise HTTPException(status_code=400, detail="Model cannot be empty")
+        raise HTTPException(status_code=422, detail="Model cannot be empty")
     if len(car.model) > 100:
-        raise HTTPException(status_code=400, detail="Model name too long")
+        raise HTTPException(status_code=422, detail="Model name too long")
 
 def validate_car_update(car: schemas.CarUpdate):
     '''
@@ -29,17 +28,17 @@ def validate_car_update(car: schemas.CarUpdate):
     '''
     if car.year is not None:
         if car.year < 1900 or car.year > datetime.now().year + 1:
-            raise HTTPException(status_code=400, detail="Invalid year for car")
+            raise HTTPException(status_code=422, detail="Invalid year for car")
     if car.brand is not None:
         if car.brand.strip() == "":
-            raise HTTPException(status_code=400, detail="Brand cannot be empty")
+            raise HTTPException(status_code=422, detail="Brand cannot be empty")
         if len(car.brand) > 100:
-            raise HTTPException(status_code=400, detail="Brand name too long")
+            raise HTTPException(status_code=422, detail="Brand name too long")
     if car.model is not None:
         if car.model.strip() == "":
-            raise HTTPException(status_code=400, detail="Model cannot be empty")
+            raise HTTPException(status_code=422, detail="Model cannot be empty")
         if len(car.model) > 100:
-            raise HTTPException(status_code=400, detail="Model name too long")
+            raise HTTPException(status_code=422, detail="Model name too long")
 
 logger = get_logger()
 
