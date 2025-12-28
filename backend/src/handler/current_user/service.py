@@ -8,23 +8,7 @@ from db import models, schemas
 from db.database import get_db
 from logger.logger import get_logger
 
-def validate_patching_current_user(
-    user_update: schemas.CurrentUserUpdate,
-    current_user: dict):
-    """
-    Validate fields for patching current user
-    """
-        
-def validate_updating_password(
-    password_update: schemas.CurrentUserPassword,
-    current_user: dict):
-    """
-    Validate fields for updating current user's password
-    """
-    if len(password_update.new_password) < 8:
-        logger.warning(f"Password update failed for user {current_user['user_id']}: new password too short")
-        raise HTTPException(status_code=422, detail="New password must be at least 8 characters long")
-        
+
 logger = get_logger()
 # ---------------- Current user endpoints ----------------
 async def get_current_user_info(
@@ -56,7 +40,6 @@ async def patch_current_user_info(
     Update current logged-in user information
     """
     try:
-        validate_patching_current_user(user_update)
         logger.debug(f"Patching user {current_user['user_id']} with data: {user_update.model_dump(exclude_unset=True)}")
         result = await db.execute(
             select(models.User).where(models.User.user_id == current_user["user_id"])
@@ -88,7 +71,6 @@ async def update_current_user_password(
     Update current logged-in user's password
     """
     try:
-        validate_updating_password(password_update, current_user)
         logger.debug(f"Updating password for user {current_user['user_id']}")
         result = await db.execute(
             select(models.User).where(models.User.user_id == current_user["user_id"])

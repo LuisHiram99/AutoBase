@@ -181,9 +181,9 @@ class CurrentUserPassword(BaseModel):
 
 
 class CarBase(BaseModel):
-    year: int
-    brand: str
-    model: str
+    year: int = Field(..., ge=1900, le=datetime.now().year + 1)
+    brand: str = Field(..., min_length=1, max_length=100)
+    model: str = Field(..., min_length=1, max_length=100)
 
 class Car(CarBase):
     car_id: int
@@ -195,9 +195,9 @@ class CarCreate(CarBase):
     pass
 
 class CarUpdate(BaseModel):
-    year: Optional[int] = None
-    brand: Optional[str] = None
-    model: Optional[str] = None
+    year: Optional[int] = Field(None, ge=1900, le=datetime.now().year + 1)
+    brand: Optional[str] = Field(None, min_length=1, max_length=100)
+    model: Optional[str] = Field(None, min_length=1, max_length=100)
 
 # ---
 class CustomerCarBase(BaseModel):

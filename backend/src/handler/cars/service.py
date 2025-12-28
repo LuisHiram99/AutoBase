@@ -7,39 +7,6 @@ from logger.logger import get_logger
 from auth.auth import get_current_user, pwd_context, admin_required
 from db import models, schemas
 
-def validate_car_creation(car: schemas.CarCreate):
-    '''
-    Validate car fields before database operations
-    '''
-    if car.year < 1900 or car.year > datetime.now().year + 1:
-        raise HTTPException(status_code=422, detail="Invalid year for car")
-    if not car.brand or car.brand.strip() == "":
-        raise HTTPException(status_code=422, detail="Brand cannot be empty")
-    if len(car.brand) > 100:
-        raise HTTPException(status_code=422, detail="Brand name too long")
-    if not car.model or car.model.strip() == "":
-        raise HTTPException(status_code=422, detail="Model cannot be empty")
-    if len(car.model) > 100:
-        raise HTTPException(status_code=422, detail="Model name too long")
-
-def validate_car_update(car: schemas.CarUpdate):
-    '''
-    Validate car fields before update operations
-    '''
-    if car.year is not None:
-        if car.year < 1900 or car.year > datetime.now().year + 1:
-            raise HTTPException(status_code=422, detail="Invalid year for car")
-    if car.brand is not None:
-        if car.brand.strip() == "":
-            raise HTTPException(status_code=422, detail="Brand cannot be empty")
-        if len(car.brand) > 100:
-            raise HTTPException(status_code=422, detail="Brand name too long")
-    if car.model is not None:
-        if car.model.strip() == "":
-            raise HTTPException(status_code=422, detail="Model cannot be empty")
-        if len(car.model) > 100:
-            raise HTTPException(status_code=422, detail="Model name too long")
-
 logger = get_logger()
 
 
@@ -49,7 +16,6 @@ async def create_car(car: schemas.CarCreate, db: AsyncSession, current_user: dic
     Construct a query to create a new car
     '''
     try:
-        validate_car_creation(car)
         db_car = models.Car(**car.model_dump())
         db.add(db_car)
         await db.commit()
@@ -101,7 +67,6 @@ async def update_car(current_user: dict, car_id: int, db: AsyncSession, car_upda
     Construct a query to update a car's information
     '''
     try:
-        validate_car_update(car_update)
         car_data = await get_car_by_id(current_user, db, car_id)
             # Prepare update data
         update_data = car_update.model_dump(exclude_unset=True)
