@@ -38,8 +38,8 @@ logger.add(
     str(logs_dir / "app.log"),
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
     level=log_level,
-    rotation="10 seconds",
-    retention="5 seconds"
+    rotation="10 MB",
+    retention="5 days"
 )
 
 if logs_source_token:
