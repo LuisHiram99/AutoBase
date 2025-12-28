@@ -4,6 +4,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from auth import auth
 from typing import Annotated
 from pathlib import Path  # Add this import
@@ -18,6 +19,7 @@ from handler.rate_limiter import limiter
 from handler.parts import parts
 from handler.workers import workers
 from handler.jobs import jobs
+from logger.logger import get_logger
 
 
 description = """
@@ -51,11 +53,19 @@ tags_metadata = [
     },
 ]
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger = get_logger()
+    logger.info("Starting up the application...")
+    yield
+    logger.info("Shutting down the application...")
+
 app = FastAPI(
     title="Taller API",
     description=description,
     version="1.0.0",
-    openapi_tags=tags_metadata
+    openapi_tags=tags_metadata,
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -96,3 +106,7 @@ app.include_router(jobs.router, prefix=api_route, tags=["jobs"])
 @app.get("/")
 async def root():
     return {"message": "Welcome to AutoBase API"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}

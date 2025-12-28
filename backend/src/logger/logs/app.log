@@ -1,0 +1,20 @@
+2025-12-27 15:31:24 | DEBUG | Logger initialized in development mode with level DEBUG
+2025-12-27 15:35:40 | DEBUG | Logger initialized in development mode with level DEBUG
+2025-12-27 15:35:40 | INFO | Starting up the application...
+2025-12-27 15:36:51 | DEBUG | Creating user with email: user@example.com
+2025-12-27 15:36:51 | WARNING | Attempt to create user with existing email: user@example.com
+2025-12-27 15:38:08 | DEBUG | Creating user with email: loggingtest@example.com
+2025-12-27 15:38:08 | INFO | User created with email: loggingtest@example.com
+2025-12-27 15:43:54 | INFO | Shutting down the application...
+2025-12-27 15:44:23 | DEBUG | Logger initialized in development mode with level DEBUG
+2025-12-27 15:44:23 | INFO | Starting up the application...
+2025-12-27 15:44:30 | DEBUG | Creating new user
+2025-12-27 15:44:30 | WARNING | User attempted to create user with existing email
+2025-12-27 15:50:54 | INFO | Shutting down the application...
+2025-12-27 15:50:58 | DEBUG | Logger initialized in development mode with level DEBUG
+2025-12-27 15:50:58 | INFO | Starting up the application...
+2025-12-27 15:51:13 | DEBUG | Creating new user
+2025-12-27 15:51:13 | WARNING | User attempted to create user with existing email
+2025-12-27 15:52:43 | DEBUG | Creating new user
+2025-12-27 15:52:43 | INFO | User created with email: loggingtestwithip@example.com
+2025-12-27 19:07:29 | INFO | Shutting down the application...

@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from dotenv import load_dotenv
-from fastapi import APIRouter, Depends, HTTPException, Form, status
+from fastapi import APIRouter, Depends, HTTPException, Form, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr
@@ -15,6 +15,7 @@ from db.database import async_session
 from secrets import token_hex
 import os
 from pathlib import Path
+from logger.logger import get_logger
 
 
 
@@ -30,7 +31,7 @@ load_dotenv(dotenv_path=env_path)
 SECRET_KEY = os.getenv("SECRET_KEY", token_hex(32))
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
+logger = get_logger()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 # Use argon2 for password hashing (using argon2-cffi backend)
@@ -49,27 +50,30 @@ class Token(BaseModel):
 db_dependency = Annotated[AsyncSession, Depends(get_db)]
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
-async def create_user(user: CreateUserRequest, db: db_dependency):
+async def create_user(user: CreateUserRequest, db: db_dependency, request: Request):
+    client_ip = request.client.host
     create_user_model = User(
         first_name=user.first_name,
         last_name=user.last_name,  
         email=user.email,
         hashed_password=pwd_context.hash(user.password)
     )
-
+    logger.debug(f"Creating new user", extra={"ip": client_ip})
     if await email_exists(user.email, db):
+        logger.warning(f"User attempted to create user with existing email", extra={"ip": client_ip})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-
+    logger.info(f"User created with email: {user.email}", extra={"ip": client_ip})
     db.add(create_user_model)
     await db.commit()
     await db.refresh(create_user_model)
     return {'message': 'User created successfully'}
 
 @router.post("/login", response_model=Token)
-async def login_for_access_token(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(db: db_dependency, request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    client_ip = request.client.host
     email = form_data.username
     password = form_data.password
     user = await authenticate_user(db, email, password)
@@ -80,7 +84,7 @@ async def login_for_access_token(db: db_dependency, form_data: OAuth2PasswordReq
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = create_access_token(user.email, user.user_id, user.token_version, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-
+    logger.info(f"User logged in: {email}", extra={"ip": client_ip})
     return {"access_token": token, "token_type": "bearer"}
 
 async def authenticate_user(db: db_dependency, email: str, password: str):
