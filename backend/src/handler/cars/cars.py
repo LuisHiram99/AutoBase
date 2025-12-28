@@ -8,7 +8,9 @@ from ..rate_limiter import limiter
 
 from db import models, schemas, database
 from db.database import get_db
+from logger.logger import get_logger
 
+logger = get_logger()
 router = APIRouter()
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
