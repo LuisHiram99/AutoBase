@@ -23,7 +23,8 @@ async def get_current_user_info(
         )
         user = result.scalars().first()
         if not user:
-            logger.error(f"User {current_user['user_id']} tried to access info but was not found in DB")
+            logger.error(f"User {current_user['user_id']} tried to access info but was not found in DB", 
+                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_info"})
             raise HTTPException(status_code=404, detail="User not found")
         return user
     except HTTPException:
@@ -40,7 +41,8 @@ async def patch_current_user_info(
     Update current logged-in user information
     """
     try:
-        logger.debug(f"Patching user {current_user['user_id']} with data: {user_update.model_dump(exclude_unset=True)}")
+        logger.debug(f"Patching user {current_user['user_id']}", 
+                     extra={"user_id": current_user["user_id"], "endpoint": "patch_current_user_info"})
         result = await db.execute(
             select(models.User).where(models.User.user_id == current_user["user_id"])
         )
@@ -55,12 +57,14 @@ async def patch_current_user_info(
 
         await db.commit()
         await db.refresh(db_user)
-        logger.info(f"User {current_user['user_id']} updated their info")
+        logger.info(f"User {current_user['user_id']} updated their info",
+                    extra={"user_id": current_user["user_id"], "endpoint": "patch_current_user_info"})
         return db_user  
     except HTTPException:
         raise  
     except Exception as e:
-        logger.error(f"Database error in patch_current_user_info: {e}")
+        logger.error(f"Database error in patch_current_user_info: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "patch_current_user_info"})
         raise HTTPException(status_code=500, detail="Error updating user info")
     
 async def update_current_user_password(
@@ -77,10 +81,12 @@ async def update_current_user_password(
         )
         db_user = result.scalars().first()
         if not db_user:
-            logger.error(f"User {current_user['user_id']} tried to update password but was not found in DB")
+            logger.error(f"User {current_user['user_id']} tried to update password but was not found in DB",
+                         extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_password"})
             raise HTTPException(status_code=404, detail="User not found")
         if not pwd_context.verify(password_update.old_password, db_user.hashed_password):
-            logger.error(f"User {current_user['user_id']} provided incorrect old password")
+            logger.error(f"User {current_user['user_id']} provided incorrect old password",
+                         extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_password"})
             raise HTTPException(status_code=400, detail="Old password is incorrect")
         
         hashed_password = pwd_context.hash(password_update.new_password)
@@ -88,7 +94,8 @@ async def update_current_user_password(
 
         # Increment token version to invalidate all existing tokens
         db_user.token_version += 1
-        logger.info(f"User {current_user['user_id']} updated their password")
+        logger.info(f"User {current_user['user_id']} updated their password", 
+                    extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_password"})
 
         await db.commit()
         await db.refresh(db_user)
@@ -109,7 +116,8 @@ async def update_current_user_password(
     except HTTPException:
         raise  
     except Exception as e:
-        logger.error(f"Database error in update_current_user_password: {e}")
+        logger.error(f"Database error in update_current_user_password: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_password"})
         raise HTTPException(status_code=500, detail="Error updating password")
 
 async def delete_current_user_account(
@@ -124,17 +132,20 @@ async def delete_current_user_account(
         )
         db_user = result.scalars().first()
         if not db_user:
-            logger.warning(f"User {current_user['user_id']} tried to delete account but was not found in DB")
+            logger.warning(f"User {current_user['user_id']} tried to delete account but was not found in DB",
+                           extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_account"})
             raise HTTPException(status_code=404, detail="User not found")
 
         await db.delete(db_user)
         await db.commit()
-        logger.info(f"User {current_user['email']} deleted their account")
+        logger.info(f"User {current_user['email']} deleted their account",
+                    extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_account"})
         return db_user
     except HTTPException:
         raise  
     except Exception as e:
-        logger.error(f"Database error in delete_current_user_account: {e}")
+        logger.error(f"Database error in delete_current_user_account: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_account"})
         raise HTTPException(status_code=500, detail="Error deleting user account")
 # ---------------- End of current user's info endpoints ----------------
 

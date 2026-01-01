@@ -37,7 +37,7 @@ class Customer(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     phone = Column(String(20), nullable=False)
-    email = Column(String)
+    email = Column(String(100))
     workshop_id = Column(Integer, ForeignKey("workshops.workshop_id"), nullable=False)
 
 

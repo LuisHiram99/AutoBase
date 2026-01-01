@@ -5,6 +5,9 @@ from sqlalchemy import select, delete
 from handler.workshops.service import get_current_user_workshop_id
 from db import models, schemas
 from exceptions.exceptions import notFoundException, fetchErrorException
+from logger.logger import get_logger
+
+logger = get_logger()   
 
 
 # ---------------- All customer_car functions ----------------
@@ -22,6 +25,9 @@ async def create_customer_car_for_current_user_workshop(
         .where(models.Customer.workshop_id == get_current_user_workshop_id(current_user))
     )
     if customer_res.scalar_one_or_none() is None:
+        logger.warning(f"Customer with ID {customer_car.customer_id} not found in workshop ID {get_current_user_workshop_id(current_user)}",
+                       extra={"user_id": current_user["user_id"], "workshop_id": get_current_user_workshop_id(current_user), 
+                              "endpoint": "create_customer_car_for_current_user_workshop"})
         raise HTTPException(status_code=404, detail="Customer not found in your workshop")
 
     create_customer_car_model = models.CustomerCar(
@@ -34,6 +40,9 @@ async def create_customer_car_for_current_user_workshop(
     db.add(create_customer_car_model)
     await db.commit()
     await db.refresh(create_customer_car_model)
+    logger.info(f"CustomerCar created with ID {create_customer_car_model.customer_car_id} for customer ID {customer_car.customer_id}",
+                extra={"user_id": current_user["user_id"], "workshop_id": get_current_user_workshop_id(current_user),
+                       "endpoint": "create_customer_car_for_current_user_workshop"})
     return create_customer_car_model
 
 async def create_customer_car(
@@ -47,6 +56,8 @@ async def create_customer_car(
         # Check if customer exist in db
         customer_res = await db.execute(select(models.Customer).where(models.Customer.customer_id == customer_car.customer_id))
         if customer_res.scalar_one_or_none() is None:
+            logger.warning(f"Customer with ID {customer_car.customer_id} not found",
+                           extra={"user_id": current_user["user_id"], "endpoint": "create_customer_car"})
             raise HTTPException(status_code=404, detail="Customer not found")
 
         # Check if car exist in db
@@ -59,11 +70,14 @@ async def create_customer_car(
         db.add(db_customer_car)
         await db.commit()
         await db.refresh(db_customer_car)
+        logger.info(f"CustomerCar created with ID {db_customer_car.customer_car_id} by admin",
+                    extra={"user_id": current_user["user_id"], "endpoint": "create_customer_car"})
         return db_customer_car
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Database error in create_customer_car: {e}")
+        logger.error(f"Database error in create_customer_car: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "create_customer_car"})
         raise fetchErrorException
     
 async def get_all_customers_cars(
@@ -75,6 +89,8 @@ async def get_all_customers_cars(
     Construct a query to get all customers_cars with car information
     '''
     try:
+        logger.info(f"Fetching all customer_cars by admin",
+                    extra={"user_id": current_user["user_id"], "endpoint": "get_all_customers_cars"})
         result = await db.execute(
             select(models.CustomerCar, models.Car)
             .join(models.Car, models.CustomerCar.car_id == models.Car.car_id)
@@ -98,7 +114,8 @@ async def get_all_customers_cars(
         
         return customer_cars_with_info
     except Exception as e:
-        print(f"Database error in get_all_customers_cars: {e}")
+        logger.error(f"Database error in get_all_customers_cars: {e}", 
+                     extra={"user_id": current_user["user_id"], "endpoint": "get_all_customers_cars"})
         raise fetchErrorException
     
 async def get_customer_cars_for_current_user_workshop(
@@ -110,32 +127,37 @@ async def get_customer_cars_for_current_user_workshop(
     """
     Get customer_cars associated with the current logged-in user's workshop with car information
     """
-    workshop_id = get_current_user_workshop_id(current_user)
-    result = await db.execute(
-        select(models.CustomerCar, models.Car)
-        .join(models.Car, models.CustomerCar.car_id == models.Car.car_id)
-        .join(models.Customer, models.CustomerCar.customer_id == models.Customer.customer_id)
-        .filter(models.Customer.workshop_id == workshop_id)
-        .offset(skip)
-        .limit(limit)
-    )
-    customer_cars_data = result.all()
-    
-    customer_cars_with_info = [
-        schemas.CustomerCarWithCarInfo(
-            customer_car_id=customer_car.customer_car_id,
-            customer_id=customer_car.customer_id,
-            car_id=customer_car.car_id,
-            license_plate=customer_car.license_plate,
-            color=customer_car.color,
-            car_brand=car.brand,
-            car_model=car.model,
-            car_year=car.year
+    try:
+        workshop_id = get_current_user_workshop_id(current_user)
+        result = await db.execute(
+            select(models.CustomerCar, models.Car)
+            .join(models.Car, models.CustomerCar.car_id == models.Car.car_id)
+            .join(models.Customer, models.CustomerCar.customer_id == models.Customer.customer_id)
+            .filter(models.Customer.workshop_id == workshop_id)
+            .offset(skip)
+            .limit(limit)
         )
-        for customer_car, car in customer_cars_data
-    ]
-    
-    return customer_cars_with_info
+        customer_cars_data = result.all()
+        
+        customer_cars_with_info = [
+            schemas.CustomerCarWithCarInfo(
+                customer_car_id=customer_car.customer_car_id,
+                customer_id=customer_car.customer_id,
+                car_id=customer_car.car_id,
+                license_plate=customer_car.license_plate,
+                color=customer_car.color,
+                car_brand=car.brand,
+                car_model=car.model,
+                car_year=car.year
+            )
+            for customer_car, car in customer_cars_data
+        ]
+        
+        return customer_cars_with_info
+    except Exception as e:
+        logger.error(f"Database error in get_customer_cars_for_current_user_workshop: {e}", 
+                     extra={"user_id": current_user["user_id"], "endpoint": "get_customer_cars_for_current_user_workshop"})
+        raise fetchErrorException
     
 async def get_customer_car_by_id(
         customer_car_id: int,
