@@ -19,6 +19,10 @@ async def create_customer(
     Construct a query to create a new customer
     '''
     try:
+        workshop_id = get_current_user_workshop_id(current_user)
+        if workshop_id == 1:
+            raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
+        
         db_customer = models.Customer(**customer.model_dump())
 
         db.add(db_customer)
@@ -44,7 +48,7 @@ async def create_current_user_workshop_customer(
         logger.debug(f"Creating customer for workshop {get_current_user_workshop_id(current_user)}", 
                      extra={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop_customer"})
         workshop_id = get_current_user_workshop_id(current_user)
-        if workshop_id == 0:
+        if workshop_id == 1:
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         
         create_customer_model = models.Customer(
@@ -104,7 +108,7 @@ async def get_current_user_workshop_customers(
                      extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customers"})
         workshop_id = get_current_user_workshop_id(current_user)
         
-        if workshop_id == 0:
+        if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop and tried to access customers",
                          extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customers"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
@@ -167,7 +171,7 @@ async def get_current_user_workshop_customer_by_id(
         logger.debug(f"Fetching customer with ID {customer_id} for workshop {get_current_user_workshop_id(current_user)}", 
                      extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customer_by_id"})
         workshop_id = get_current_user_workshop_id(current_user)
-        if workshop_id == 0:   
+        if workshop_id == 1:   
             logger.error(f"Current user {current_user['user_id']} has no associated workshop and tried to access customer with ID {customer_id}",
                          extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customer_by_id"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
@@ -234,7 +238,7 @@ async def update_current_user_workshop_customer_by_id(
         logger.debug(f"Updating customer with ID {customer_id} for workshop {get_current_user_workshop_id(current_user)}", 
                      extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_customer_by_id"})
         workshop_id = get_current_user_workshop_id(current_user)
-        if workshop_id == 0:   
+        if workshop_id == 1:   
             logger.error(f"Current user {current_user['user_id']} has no associated workshop and tried to update customer with ID {customer_id}",
                          extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_customer_by_id"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
@@ -351,7 +355,7 @@ async def assign_customer_to_car(
         
         # Get current user's workshop ID
         workshop_id = get_current_user_workshop_id(current_user)
-        if workshop_id == 0:
+        if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop",
                          extra={"user_id": current_user["user_id"], "endpoint": "assign_customer_to_car"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
@@ -411,7 +415,7 @@ async def get_cars_by_customer(
         
         # Get current user's workshop ID
         workshop_id = get_current_user_workshop_id(current_user)
-        if workshop_id == 0:
+        if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop",
                          extra={"user_id": current_user["user_id"], "endpoint": "get_cars_by_customer"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
@@ -454,7 +458,7 @@ async def get_customer_full_car_info_by_id(
         logger.debug(f"Fetching full car info for customer ID {customer_id}", 
                      extra={"user_id": current_user["user_id"], "endpoint": "get_customer_full_car_info_by_id"})
         workshop_id = get_current_user_workshop_id(current_user)
-        if workshop_id == 0:
+        if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop",
                          extra={"user_id": current_user["user_id"], "endpoint": "get_customer_full_car_info_by_id"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
