@@ -167,6 +167,8 @@ async def get_customer_car_by_id(
     Construct a query to get a customer_car by ID with car information
     '''
     try:
+        logger.debug(f"Fetching customer_car with ID {customer_car_id}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "get_customer_car_by_id"})
         result = await db.execute(
             select(models.CustomerCar, models.Car)
             .join(models.Car, models.CustomerCar.car_id == models.Car.car_id)
@@ -176,6 +178,8 @@ async def get_customer_car_by_id(
         customer_car_data = result.first()
         # If customer_car not found, raise 404
         if customer_car_data is None:
+            logger.error(f"CustomerCar with ID {customer_car_id} not found",
+                         extra={"user_id": current_user["user_id"], "endpoint": "get_customer_car_by_id"})
             raise notFoundException
         
         customer_car, car = customer_car_data
@@ -193,7 +197,8 @@ async def get_customer_car_by_id(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Database error in get_customer_car_by_id: {e}")
+        logger.error(f"Database error in get_customer_car_by_id: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "get_customer_car_by_id"})
         raise fetchErrorException
     
 async def update_customer_car(
@@ -205,15 +210,16 @@ async def update_customer_car(
     Construct a query to update a customer_car's information
     '''
     try:
-        # Check if customer_car exists first
-        customer_car_exists = await get_customer_car_by_id(customer_car_id, db, current_user)
-        
+        logger.debug(f"Updating customer_car with ID {customer_car_id}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "update_customer_car"})
         # Get the actual SQLAlchemy model for updating
         result = await db.execute(
             select(models.CustomerCar).where(models.CustomerCar.customer_car_id == customer_car_id)
         )
         customer_car_model = result.scalar_one_or_none()
         if customer_car_model is None:
+            logger.error(f"CustomerCar with ID {customer_car_id} not found for update",
+                         extra={"user_id": current_user["user_id"], "endpoint": "update_customer_car"})
             raise notFoundException
             
         # Prepare update data
@@ -222,11 +228,15 @@ async def update_customer_car(
         if "customer_id" in update_data:
             customer_res = await db.execute(select(models.Customer).where(models.Customer.customer_id == update_data["customer_id"]))
             if customer_res.scalar_one_or_none() is None:
+                logger.error(f"Customer with ID {update_data['customer_id']} not found for update",
+                             extra={"user_id": current_user["user_id"], "endpoint": "update_customer_car"})
                 raise HTTPException(status_code=404, detail="Customer not found")
 
         if "car_id" in update_data:
             car_res = await db.execute(select(models.Car).where(models.Car.car_id == update_data["car_id"]))
             if car_res.scalar_one_or_none() is None:
+                logger.error(f"Car with ID {update_data['car_id']} not found for update",
+                             extra={"user_id": current_user["user_id"], "endpoint": "update_customer_car"})
                 raise HTTPException(status_code=404, detail="Car not found")
 
         # Update the SQLAlchemy model fields
@@ -235,11 +245,14 @@ async def update_customer_car(
         # Commit the transaction
         await db.commit()
         await db.refresh(customer_car_model)
+        logger.info(f"CustomerCar with ID {customer_car_id} updated successfully",
+                    extra={"user_id": current_user["user_id"], "endpoint": "update_customer_car"})
         return customer_car_model
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Database error in update_customer_car: {e}")
+        logger.error(f"Database error in update_customer_car: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "update_customer_car"})
         raise fetchErrorException
     
 async def delete_customer_car(
@@ -250,6 +263,9 @@ async def delete_customer_car(
     Construct a query to delete a customer_car
     '''
     try:
+        logger.debug(f"Deleting customer_car with ID {customer_car_id}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "delete_customer_car"})
+        
         customer_car_data = await get_customer_car_by_id(customer_car_id, db, current_user)
 
         await db.execute(
@@ -260,5 +276,6 @@ async def delete_customer_car(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Database error in delete_customer_car: {e}")
+        logger.error(f"Database error in delete_customer_car: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "delete_customer_car"})
         raise fetchErrorException
