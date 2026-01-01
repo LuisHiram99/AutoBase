@@ -8,28 +8,7 @@ from pathlib import Path
 from db import models, schemas
 from exceptions.exceptions import notFoundException, fetchErrorException
 
-
-def validate_workshop_fields(workshop: schemas.WorkshopCreate | schemas.WorkshopUpdate):
-    """
-    Validate required fields for creating or updating a workshop
-    """
-    # For WorkshopCreate, workshop_name is required. For WorkshopUpdate, it's optional
-    if isinstance(workshop, schemas.WorkshopCreate):
-        if not workshop.workshop_name or not workshop.workshop_name.strip():
-            raise HTTPException(status_code=422, detail="Workshop name cannot be empty")
-    elif isinstance(workshop, schemas.WorkshopUpdate):
-        # Only validate workshop_name if it's provided in the update
-        if workshop.workshop_name is not None and (not workshop.workshop_name or not workshop.workshop_name.strip()):
-            raise HTTPException(status_code=422, detail="Workshop name cannot be empty")
-    
-    if workshop.workshop_name and len(workshop.workshop_name) > 100:
-        raise HTTPException(status_code=422, detail="Workshop name exceeds maximum length of 100 characters")
-    if workshop.address and len(workshop.address) > 200:
-        raise HTTPException(status_code=422, detail="Address exceeds maximum length of 200 characters")
-    if workshop.opening_hours and len(workshop.opening_hours) > 50:
-        raise HTTPException(status_code=422, detail="Opening hours exceeds maximum length of 50 characters")
-    if workshop.closing_hours and len(workshop.closing_hours) > 50:
-        raise HTTPException(status_code=422, detail="Closing hours exceeds maximum length of 50 characters")    
+   
 
 
 # ---------------- All workshops functions (ADMIN REQUIRED)----------------
@@ -41,7 +20,6 @@ async def create_workshop(
     Construct a query to create a new workshop
     '''
     try:
-        validate_workshop_fields(workshop)
         db_workshop = models.Workshop(**workshop.model_dump())
         db.add(db_workshop)
         await db.commit()
@@ -102,7 +80,6 @@ async def update_workshop(
     Construct a query to update a workshop's information
     '''
     try:
-        validate_workshop_fields(workshop_update)
         workshop_data = await get_workshop_by_id(workshop_id, db, current_user)
         if workshop_data is None:
             raise notFoundException
@@ -160,7 +137,6 @@ async def create_current_user_workshop(
     Create a workshop for the current logged-in user
     """
     try: 
-        validate_workshop_fields(workshop)
         if get_current_user_workshop_id(current_user) != 1:
             raise HTTPException(status_code=400, detail="User already has a workshop")
         
@@ -325,7 +301,6 @@ async def patch_current_user_workshop(
     Update the workshop associated with the current logged-in user
     """
     try:
-        validate_workshop_fields(workshop_update)
         if get_current_user_workshop_id(current_user) == 1:
             raise HTTPException(status_code=400, detail="User has no workshop to update")
         

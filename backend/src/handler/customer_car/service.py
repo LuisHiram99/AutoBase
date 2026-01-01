@@ -151,6 +151,8 @@ async def get_all_customers_cars(
         logger.info(f"[ADMIN FUNC] Fetched all customer_cars by admin",
                     extra={"user_id": current_user["user_id"], "endpoint": "get_all_customers_cars"})
         return customer_cars_with_info
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"[ADMIN FUNC] Database error in get_all_customers_cars: {e}", 
                      extra={"user_id": current_user["user_id"], "endpoint": "get_all_customers_cars"})
@@ -205,6 +207,8 @@ async def get_customer_cars_for_current_user_workshop(
                     extra={"user_id": current_user["user_id"], "workshop_id": workshop_id,
                            "endpoint": "get_customer_cars_for_current_user_workshop"})
         return customer_cars_with_info
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Database error in get_customer_cars_for_current_user_workshop: {e}", 
                      extra={"user_id": current_user["user_id"], "endpoint": "get_customer_cars_for_current_user_workshop"})

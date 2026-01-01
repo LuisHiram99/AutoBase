@@ -42,9 +42,9 @@ async def read_user(
     """
     return await service.get_user_by_id(user, db, user_id)
 
-@router.put("/users/{user_id}", response_model=schemas.User, summary="Update user by ID")
+@router.patch("/users/{user_id}", response_model=schemas.User, summary="Update user by ID")
 @limiter.limit("15/minute")
-async def update_user(
+async def patch_user(
     request: Request,
     user_id: int,
     user_update: schemas.UserUpdate,
