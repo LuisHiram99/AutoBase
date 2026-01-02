@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
-from auth.auth import get_current_user, pwd_context
+from auth.auth import pwd_context
 from db import models, schemas
 from exceptions.exceptions import notFoundException, fetchErrorException
 from logger.logger import get_logger

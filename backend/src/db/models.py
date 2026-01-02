@@ -1,5 +1,4 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, PrimaryKeyConstraint, DateTime, func
-from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 from .database import Base
 import enum
