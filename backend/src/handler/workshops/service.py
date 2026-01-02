@@ -563,6 +563,7 @@ async def update_current_user_workshop_part(
     Patch a part associated with the current logged-in user's workshop
     """
     try: 
+        logger.debug(f"Updating part {part_id} for user {current_user['user_id']}'s workshop")  
         workshop_id = get_current_user_workshop_id(current_user)
 
         if workshop_id == 1:
