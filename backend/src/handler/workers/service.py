@@ -26,9 +26,9 @@ async def add_worker_to_current_user_workshop(
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
-            logger.error("User does not have an associated workshop.")
-            raise HTTPException(status_code=400, detail="User does not have an associated workshop.",
-                                extra={"user_id": current_user["user_id"], "endpoint": "add_worker_to_current_user_workshop"})
+            logger.error("User does not have an associated workshop.",
+                          extra={"user_id": current_user["user_id"], "endpoint": "add_worker_to_current_user_workshop"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
 
         # Create the worker model and add the values
         create_worker_model = models.Worker(
@@ -69,9 +69,9 @@ async def get_all_workers_for_current_user_workshop(
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
-            logger.error("User does not have an associated workshop.")
-            raise HTTPException(status_code=400, detail="User does not have an associated workshop.",
-                                extra={"user_id": current_user["user_id"], "endpoint": "get_all_workers_for_current_user_workshop"})
+            logger.error("User does not have an associated workshop.",
+                            extra={"user_id": current_user["user_id"], "endpoint": "get_all_workers_for_current_user_workshop"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
 
         # Query to get all workers for the user's workshop with pagination
         result = await db.execute(
@@ -109,9 +109,10 @@ async def get_worker_by_id(
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
-            logger.error("User does not have an associated workshop.")
-            raise HTTPException(status_code=400, detail="User does not have an associated workshop.",
-                                extra={"user_id": current_user["user_id"], "endpoint": "get_worker_by_id"})
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "get_worker_by_id"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
+                                
 
 
         # Query to get the worker by ID within user's workshop 
@@ -154,9 +155,9 @@ async def update_worker_info(
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
-            logger.error("User does not have an associated workshop.")
-            raise HTTPException(status_code=400, detail="User does not have an associated workshop.",
-                                extra={"user_id": current_user["user_id"], "endpoint": "update_worker_info"})
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "update_worker_info"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
         
         # Query to get the worker by ID within user's workshop
         result = await db.execute(
@@ -205,9 +206,9 @@ async def delete_worker_info(
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
-            logger.error("User does not have an associated workshop.")
-            raise HTTPException(status_code=400, detail="User does not have an associated workshop.",
-                                extra={"user_id": current_user["user_id"], "endpoint": "delete_worker_info"})
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "delete_worker_info"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")                                
 
         # Query to get the worker by ID within user's workshop
         result = await db.execute(

@@ -415,10 +415,10 @@ class JobCreateForWorkshop(BaseModel):
     status: StatusEnum
 
 class JobUpdate(BaseModel):
-    invoice: Optional[str] = None
-    service_description: Optional[str] = None
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
+    invoice: Optional[str] = Field(None, min_length=3, max_length=50, pattern=r'^[A-Z0-9\-_]+$')
+    service_description: Optional[str] = Field(None, max_length=255)
+    start_date: Optional[str] = Field(None, min_length=1, max_length=20)
+    end_date: Optional[str] = Field(None, max_length=20)
     status: Optional[StatusEnum] = None
 
 # --------------------- Job Parts ----------------------
