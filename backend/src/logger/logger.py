@@ -39,7 +39,7 @@ logger.add(
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
     level=log_level,
     rotation="10 MB",
-    retention="5 days"
+    retention="30 minutes",
 )
 
 if logs_source_token:
