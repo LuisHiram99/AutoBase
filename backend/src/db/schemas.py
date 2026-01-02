@@ -11,7 +11,6 @@ class RoleEnum(str, Enum):
 
 
 
-
 # --------------------- Customer ----------------------
 # Base Pydantic Models (For Create/Update operations)
 

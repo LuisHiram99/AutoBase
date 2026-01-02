@@ -38,7 +38,7 @@ logger.add(
     str(logs_dir / "app.log"),
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
     level=log_level,
-    rotation="10 MB",
+    rotation="30 minutes",
     retention="30 minutes",
 )
 

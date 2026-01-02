@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
@@ -20,9 +20,7 @@ async def create_customer_car_for_current_user_workshop(
     Create a customer_car for the current logged-in user's workshop
     """
     try:
-        logger.debug(f"Creating customer_car for customer ID {customer_car.customer_id} in workshop ID {get_current_user_workshop_id(current_user)}",
-                     extra={"user_id": current_user["user_id"], "workshop_id": get_current_user_workshop_id(current_user),
-                            "endpoint": "create_customer_car_for_current_user_workshop"})
+        logger.debug(f"Creating customer_car for customer ID {customer_car.customer_id} workshop")
         
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
@@ -36,12 +34,14 @@ async def create_customer_car_for_current_user_workshop(
             .where(models.Customer.customer_id == customer_car.customer_id)
             .where(models.Customer.workshop_id == workshop_id)
         )
-        if customer_res.scalar_one_or_none() is None:
-            logger.warning(f"Customer with ID {customer_car.customer_id} not found in workshop ID {workshop_id}",
+        # If customer does not exist, raise 404
+        result = customer_res.scalar_one_or_none()
+        if result is None:
+            logger.error(f"Customer with ID {customer_car.customer_id} not found in workshop ID {workshop_id}",
                         extra={"user_id": current_user["user_id"], "workshop_id": workshop_id, 
                                 "endpoint": "create_customer_car_for_current_user_workshop"})
             raise HTTPException(status_code=404, detail="Customer not found in your workshop")
-
+        # Create customer_car model
         create_customer_car_model = models.CustomerCar(
             customer_id=customer_car.customer_id,
             car_id=customer_car.car_id,
@@ -52,14 +52,12 @@ async def create_customer_car_for_current_user_workshop(
         db.add(create_customer_car_model)
         await db.commit()
         await db.refresh(create_customer_car_model)
-        logger.info(f"CustomerCar created with ID {create_customer_car_model.customer_car_id} for customer ID {customer_car.customer_id}",
-                    extra={"user_id": current_user["user_id"], "workshop_id": workshop_id,
-                        "endpoint": "create_customer_car_for_current_user_workshop"})
+        logger.info(f"CustomerCar created with ID {create_customer_car_model.customer_car_id} for customer ID {customer_car.customer_id}")
         return create_customer_car_model
     except HTTPException:
         raise  
     except Exception as e:
-        logger.error(f"Database error in create_customer_car_for_current_user_workshop: {e}",
+        logger.critical(f"Database error in create_customer_car_for_current_user_workshop: {e}",
                      extra={"user_id": current_user["user_id"], "workshop_id": workshop_id,
                             "endpoint": "create_customer_car_for_current_user_workshop"})
         raise fetchErrorException

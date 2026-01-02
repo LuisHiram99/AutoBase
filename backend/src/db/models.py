@@ -88,7 +88,7 @@ class CustomerCar(Base):
     __tablename__ = "customer_car"
 
     customer_car_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.customer_id", ondelete="CASCADE"), nullable=False)
     car_id = Column(Integer, ForeignKey("cars.car_id"), nullable=False)
     license_plate = Column(String(20), nullable=False)
     color = Column(String(50))
