@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from . import service
 from ..rate_limiter import limiter
+from auth.auth import get_current_user
 
 
 
