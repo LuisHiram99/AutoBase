@@ -77,6 +77,32 @@ def upgrade() -> None:
             }
         )
 
+    elif environment == "production":
+        # Hash default admin password using passlib (argon2)
+        pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+        hashed_admin = pwd_context.hash("admin")
+        hashed_manager = pwd_context.hash("manager")
+
+        # Use a connection to execute with parameters
+        bind = op.get_bind()
+        
+        # Insert admin user
+        bind.execute(
+            sa.text("""
+                INSERT INTO users (user_id, first_name, last_name, email, role, hashed_password, workshop_id)
+                VALUES (:user_id, :first_name, :last_name, :email, :role, :hashed_password, :workshop_id)
+                ON CONFLICT (user_id) DO NOTHING;
+            """),
+            {
+                "user_id": 1,
+                "first_name": "Admin",
+                "last_name": "User",
+                "email": "administrator1224@mail.com",
+                "role": "Y0eR89$%Uv",
+                "hashed_password": hashed_admin,
+                "workshop_id": 1,
+            }
+        )
 
 
 def downgrade() -> None:
