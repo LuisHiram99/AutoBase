@@ -12,7 +12,7 @@ async def create_part(part: schemas.PartCreate, db: AsyncSession, current_user: 
     Construct a query to create a new partasdsa
     '''
     try:
-        logger.debug(f"Attempting to create a new part: {part.part_name} by user {current_user["user_id"]}")
+        logger.debug(f"Attempting to create a new part: {part.part_name} by user {current_user['user_id']}")
         # Create Part instance
         db_part = models.Part(**part.model_dump())
         # Add part to the session
@@ -26,7 +26,7 @@ async def create_part(part: schemas.PartCreate, db: AsyncSession, current_user: 
         raise
     except Exception as e:
         logger.critical(f"Database error in create_part: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "create_part"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "create_part"})
         raise fetchErrorException
     
 async def get_all_parts(current_user: dict, db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -34,7 +34,7 @@ async def get_all_parts(current_user: dict, db: AsyncSession, skip: int = 0, lim
     Construct a query to get all parts with pagination
     '''
     try:
-        logger.debug(f"Fetching parts for user {current_user["user_id"]} with skip={skip} and limit={limit}")
+        logger.debug(f"Fetching parts for user {current_user['user_id']} with skip={skip} and limit={limit}")
         result = await db.execute(
             select(models.Part).offset(skip).limit(limit)
         )
@@ -44,7 +44,7 @@ async def get_all_parts(current_user: dict, db: AsyncSession, skip: int = 0, lim
         raise
     except Exception as e:
         logger.critical(f"Database error in get_all_parts: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_all_parts"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_all_parts"})
         raise fetchErrorException
     
 async def get_part_by_id(current_user: dict, db: AsyncSession, part_id: int):
@@ -52,7 +52,7 @@ async def get_part_by_id(current_user: dict, db: AsyncSession, part_id: int):
     Construct a query to get a part by ID
     '''
     try:
-        logger.debug(f"Fetching part with ID: {part_id} for user {current_user["user_id"]}")
+        logger.debug(f"Fetching part with ID: {part_id} for user {current_user['user_id']}")
 
         # Fetch the part by ID
         result = await db.execute(
@@ -63,16 +63,16 @@ async def get_part_by_id(current_user: dict, db: AsyncSession, part_id: int):
         # If part not found, raise 404
         if db_part is None:
             logger.error(f"Part with ID {part_id} not found",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_part_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_part_by_id"})
             raise notFoundException
         
-        logger.info(f"Part with ID {part_id} fetched successfully by user {current_user["user_id"]}")
+        logger.info(f"Part with ID {part_id} fetched successfully by user {current_user['user_id']}")
         return db_part
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in get_part_by_id: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_part_by_id"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_part_by_id"})
         raise fetchErrorException
     
 async def update_part(current_user: dict, part_id: int, db: AsyncSession, part_update: schemas.PartUpdate):
@@ -80,7 +80,7 @@ async def update_part(current_user: dict, part_id: int, db: AsyncSession, part_u
     Construct a query to update a part's information
     '''
     try:
-        logger.debug(f"Attempting to update part with ID: {part_id} by user {current_user["user_id"]}")
+        logger.debug(f"Attempting to update part with ID: {part_id} by user {current_user['user_id']}")
         # Fetch the part to be updated
         result = await db.execute(
             select(models.Part).filter(models.Part.part_id == part_id)
@@ -89,7 +89,7 @@ async def update_part(current_user: dict, part_id: int, db: AsyncSession, part_u
         # If part not found, raise 404
         if db_part is None:
             logger.error(f"Part with ID {part_id} not found for update",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_part"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_part"})
             raise notFoundException
         # Update fields
         update_data = part_update.model_dump(exclude_unset=True)
@@ -105,7 +105,7 @@ async def update_part(current_user: dict, part_id: int, db: AsyncSession, part_u
         raise
     except Exception as e:
         logger.critical(f"Database error in update_part: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "update_part"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "update_part"})
         raise fetchErrorException
     
 async def delete_part(current_user: dict, part_id: int, db: AsyncSession):
@@ -122,7 +122,7 @@ async def delete_part(current_user: dict, part_id: int, db: AsyncSession):
         # If part not found, raise 404
         if db_part is None:
             logger.error(f"Part with ID {part_id} not found for deletion",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_part"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_part"})
             raise notFoundException
         # Commit changes to database
         await db.delete(db_part)
@@ -133,5 +133,5 @@ async def delete_part(current_user: dict, part_id: int, db: AsyncSession):
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_part: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "delete_part"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "delete_part"})
         raise fetchErrorException

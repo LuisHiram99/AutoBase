@@ -22,12 +22,12 @@ async def add_worker_to_current_user_workshop(
     """
     try: 
         logger.debug(f"Adding worker to workshop for user: {current_user['user_id']}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "add_worker_to_current_user_workshop"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "add_worker_to_current_user_workshop"})
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                          extra={"user_id": current_user["user_id"], "endpoint": "add_worker_to_current_user_workshop"})
+                          extra={"user_id": current_user['user_id'], "endpoint": "add_worker_to_current_user_workshop"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
 
         # Create the worker model and add the values
@@ -45,13 +45,13 @@ async def add_worker_to_current_user_workshop(
         await db.commit()
         await db.refresh(create_worker_model)
         logger.info(f"Worker added to workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "add_worker_to_current_user_workshop"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "add_worker_to_current_user_workshop"})
         return create_worker_model
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in add_worker_to_current_user_workshop: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "add_worker_to_current_user_workshop"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "add_worker_to_current_user_workshop"})
         raise fetchErrorException
 
 async def get_all_workers(
@@ -98,14 +98,14 @@ async def get_all_workers_for_current_user_workshop(
     Construct a query to get all workers for the current user's workshop
     '''
     try: 
-        logger.debug(f"Retrieving workers for user: {current_user["user_id"]}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_all_workers_for_current_user_workshop"})
+        logger.debug(f"Retrieving workers for user: {current_user['user_id']}",
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_all_workers_for_current_user_workshop"})
         
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                            extra={"user_id": current_user["user_id"], "endpoint": "get_all_workers_for_current_user_workshop"})
+                            extra={"user_id": current_user['user_id'], "endpoint": "get_all_workers_for_current_user_workshop"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
 
         # Query to get all workers for the user's workshop with pagination
@@ -119,17 +119,17 @@ async def get_all_workers_for_current_user_workshop(
         workers = result.scalars().all()
         if workers is None:
             logger.error(f"No workers found for workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_all_workers_for_current_user_workshop"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_all_workers_for_current_user_workshop"})
             raise notFoundException
         
         logger.info(f"Retrieved {len(workers)} workers for workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "get_all_workers_for_current_user_workshop"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "get_all_workers_for_current_user_workshop"})
         return workers
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in get_all_workers_for_current_user_workshop: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_all_workers_for_current_user_workshop"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_all_workers_for_current_user_workshop"})
         raise fetchErrorException
     
 async def get_worker_by_id(
@@ -139,13 +139,13 @@ async def get_worker_by_id(
 ):
     try:
         logger.debug(f"Retrieving worker ID {worker_id} for user: {current_user['user_id']}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_worker_by_id"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_worker_by_id"})
         
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_worker_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_worker_by_id"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
                                 
 
@@ -161,16 +161,16 @@ async def get_worker_by_id(
         db_worker = result.scalar_one_or_none()
         if db_worker is None:
             logger.error(f"Worker ID {worker_id} not found in workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_worker_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_worker_by_id"})
             raise notFoundException
         logger.info(f"Retrieved worker ID {worker_id} for workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "get_worker_by_id"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "get_worker_by_id"})
         return db_worker
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error while retrieving worker information: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_worker_by_id"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_worker_by_id"})
         raise fetchErrorException
     
 
@@ -185,13 +185,13 @@ async def update_worker_info(
     """
     try:
         logger.debug(f"Updating worker ID {worker_id} for user: {current_user['user_id']}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "update_worker_info"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "update_worker_info"})
         
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_worker_info"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_worker_info"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
         
         # Query to get the worker by ID within user's workshop
@@ -205,7 +205,7 @@ async def update_worker_info(
         db_worker = result.scalars().first()
         if not db_worker:
             logger.error(f"Worker ID {worker_id} not found in workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_worker_info"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_worker_info"})
             raise notFoundException
         
         # Update fields
@@ -216,13 +216,13 @@ async def update_worker_info(
         await db.commit()
         await db.refresh(db_worker)
         logger.info(f"Updated worker ID {worker_id} for workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "update_worker_info"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "update_worker_info"})
         return db_worker
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in update_worker_info: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "update_worker_info"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "update_worker_info"})
         raise fetchErrorException
     
 
@@ -236,13 +236,13 @@ async def delete_worker_info(
     """
     try:
         logger.debug(f"Deleting worker ID {worker_id} for user: {current_user['user_id']}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "delete_worker_info"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "delete_worker_info"})
         
         # Check if user has a workshop associated (not default workshop_id = 1)
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_worker_info"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_worker_info"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")                                
 
         # Query to get the worker by ID within user's workshop
@@ -256,7 +256,7 @@ async def delete_worker_info(
         db_customer = result.scalars().first()
         if db_customer is None:
             logger.error(f"Worker ID {worker_id} not found in workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_worker_info"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_worker_info"})
             raise notFoundException
         
         # Delete the worker
@@ -266,13 +266,13 @@ async def delete_worker_info(
         await db.commit()
 
         logger.info(f"Deleted worker ID {worker_id} from workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "delete_worker_info"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "delete_worker_info"})
         return db_customer
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_worker_info: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "delete_worker_info"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "delete_worker_info"})
         raise fetchErrorException
 
 # ---------------- END Current user's info functions ----------------

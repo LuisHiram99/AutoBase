@@ -17,7 +17,7 @@ async def get_all_users(current_user: dict, db: AsyncSession, skip: int = 0, lim
     '''
     try:
         logger.debug(f"[ADMIN FUNC] Getting all users.",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_all_users"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_all_users"})
         result = await db.execute(
             select(models.User).offset(skip).limit(limit)
         )
@@ -28,7 +28,7 @@ async def get_all_users(current_user: dict, db: AsyncSession, skip: int = 0, lim
         raise
     except Exception as e:
         logger.critical(f"Database error in get_all_users_query: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_all_users"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_all_users"})
         raise fetchErrorException
     
 
@@ -46,7 +46,7 @@ async def get_user_by_id(current_user: dict, db: AsyncSession, user_id: int):
         # If user not found, raise 404
         if db_user is None:
             logger.error(f"[ADMIN FUNC] User with ID {user_id} not found.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_user_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_user_by_id"})
             raise notFoundException
         logger.info(f"[ADMIN FUNC] Retrieved user with ID {user_id}.")
         return db_user
@@ -54,7 +54,7 @@ async def get_user_by_id(current_user: dict, db: AsyncSession, user_id: int):
         raise
     except Exception as e:
         logger.critical(f"Database error in get_user_by_id_query: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_user_by_id"})  
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_user_by_id"})  
         raise fetchErrorException
 
 async def update_user(current_user: dict, user_id: int, db: AsyncSession, user_update: schemas.UserUpdate):
@@ -84,7 +84,7 @@ async def update_user(current_user: dict, user_id: int, db: AsyncSession, user_u
         raise
     except Exception as e:
         logger.critical(f"Database error in update_user: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "update_user"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "update_user"})
         raise fetchErrorException
     
 async def delete_user(current_user: dict, db: AsyncSession, user_id: int):
@@ -101,7 +101,7 @@ async def delete_user(current_user: dict, db: AsyncSession, user_id: int):
         # If user not found, raise 404
         if db_user is None:
             logger.error(f"[ADMIN FUNC] User with ID {user_id} not found for deletion.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_user"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_user"})
             raise notFoundException
 
         # Delete the user
@@ -116,5 +116,5 @@ async def delete_user(current_user: dict, db: AsyncSession, user_id: int):
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_user: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "delete_user"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "delete_user"})
         raise fetchErrorException

@@ -25,7 +25,7 @@ async def create_job_for_current_user_workshop(
         # If user has no workshop, raise error
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_job"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
 
         # Validate that customer_car exists and belongs to a customer in the user's workshop
@@ -39,7 +39,7 @@ async def create_job_for_current_user_workshop(
         
         if not customer_car_data:
             logger.error(f"Customer car ID {job.customer_car_id} not found in workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "create_job_for_current_user_workshop"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "create_job_for_current_user_workshop"})
             raise HTTPException(
                 status_code=404, 
                 detail="Customer car not found in your workshop"
@@ -59,13 +59,13 @@ async def create_job_for_current_user_workshop(
         await db.commit()
         await db.refresh(create_job_model)
         logger.info(f"Successfully created job ID {create_job_model.job_id} in workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "create_job_for_current_user_workshop"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "create_job_for_current_user_workshop"})
         return create_job_model
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in create_job_for_current_user_workshop: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "create_job_for_current_user_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "create_job_for_current_user_workshop"})
         raise fetchErrorException
 
 async def get_all_jobs_for_current_user_workshop(
@@ -83,7 +83,7 @@ async def get_all_jobs_for_current_user_workshop(
         # If user has no workshop, raise error
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_job"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.") 
         
         # Query to get jobs with car information
@@ -125,13 +125,13 @@ async def get_all_jobs_for_current_user_workshop(
             for job, car, customer_car in jobs_data
         ]
         logger.info(f"Successfully retrieved {len(jobs_with_car_info)} jobs for workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "get_all_jobs_for_current_user_workshop"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "get_all_jobs_for_current_user_workshop"})
         return jobs_with_car_info
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in get_all_jobs_for_current_user_workshop: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_all_jobs_for_current_user_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_all_jobs_for_current_user_workshop"})
         raise fetchErrorException
     
 
@@ -150,7 +150,7 @@ async def get_job_by_id(
         # If user has no workshop, raise error
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_job"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
         
         # Query to get the job with car information
@@ -171,7 +171,7 @@ async def get_job_by_id(
         # If job not found, raise 404
         if job_data is None:
             logger.error(f"Job ID {job_id} not found in workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_job_by_id"})   
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_job_by_id"})   
             raise HTTPException(status_code=404, detail="Job not found in your workshop.")
         
         job, car, customer_car = job_data
@@ -196,7 +196,7 @@ async def get_job_by_id(
         raise
     except Exception as e:
         logger.critical(f"Database error while retrieving job information: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_job_by_id"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_job_by_id"})
         raise fetchErrorException
 
 async def update_job_info(
@@ -215,7 +215,7 @@ async def update_job_info(
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_job_info"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
         
         # Check if the job exists and belongs to the user's workshop
@@ -229,7 +229,7 @@ async def update_job_info(
         # If job not found, raise 404
         if not db_job:
             logger.error(f"Job ID {job_id} not found in workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_job_info"})
             raise HTTPException(status_code=404, detail="Job not found in your workshop.")        
         
         # Update job fields
@@ -240,13 +240,13 @@ async def update_job_info(
         await db.commit()
         await db.refresh(db_job)
         logger.info(f"Successfully updated job ID {job_id} in workshop ID {workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "update_job_info"})
         return db_job  
     except HTTPException:
         raise  
     except Exception as e:
         logger.critical(f"Database error in update_job_info: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "update_job_info"})
         raise fetchErrorException
     
 async def delete_job(
@@ -263,7 +263,7 @@ async def delete_job(
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_job"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
         
         # Check if the job exists and belongs to the user's workshop
@@ -277,7 +277,7 @@ async def delete_job(
         # If job not found, raise notFoundException
         if not db_job:
             logger.error(f"Job ID {job_id} not found in workshop ID {workshop_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_job"})
             raise HTTPException(status_code=404, detail="Job not found in your workshop.") 
         
         # Proceed to delete the job
@@ -290,5 +290,5 @@ async def delete_job(
         raise  
     except Exception as e:
         logger.critical(f"Database error in delete_job: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "delete_job"})
         raise fetchErrorException

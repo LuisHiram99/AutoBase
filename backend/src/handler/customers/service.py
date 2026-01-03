@@ -31,7 +31,7 @@ async def create_customer(
         raise
     except Exception as e:
         logger.critical(f"Database error in create_customer: {e}", 
-                     extra={"user_id": current_user["user_id"], "endpoint": "create_customer"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "create_customer"})
         raise fetchErrorException
     
 async def get_all_customers(
@@ -51,13 +51,13 @@ async def get_all_customers(
         # Query result
         customers = result.scalars().all()
         logger.info(f"[ADMIN FUNC] Fetched {len(customers)} customers by admin user", 
-                    extra={"user_id": current_user["user_id"], "endpoint": "get_all_customers"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "get_all_customers"})
         return customers
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in get_all_customers: {e}", 
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_all_customers"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_all_customers"})
         raise fetchErrorException
     
 async def get_customer_by_id(
@@ -77,16 +77,16 @@ async def get_customer_by_id(
         # If customer not found, raise 404
         if db_customer is None:
             logger.error(f"[ADMIN FUNC] Customer with ID {customer_id} not found", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_customer_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_customer_by_id"})
             raise HTTPException(status_code=404, detail="Customer not found")
         logger.info(f"[ADMIN FUNC] Customer with ID {customer_id} fetched by admin user", 
-                    extra={"user_id": current_user["user_id"], "endpoint": "get_customer_by_id"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "get_customer_by_id"})
         return db_customer
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in get_customer_by_id: {e}", 
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_customer_by_id"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_customer_by_id"})
         raise fetchErrorException
     
 async def update_customer(
@@ -115,7 +115,7 @@ async def update_customer(
         raise
     except Exception as e:
         logger.critical(f"Database error in update_customer: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "update_customer"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "update_customer"})
         raise fetchErrorException
     
 async def delete_customer(
@@ -137,7 +137,7 @@ async def delete_customer(
         # If customer not found, raise 404
         if db_customer is None:
             logger.error(f"[ADMIN FUNC] Customer with ID {customer_id} not found", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_customer"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_customer"})
             raise HTTPException(status_code=404, detail="Customer not found")
         # Delete the customer
         await db.execute(
@@ -151,7 +151,7 @@ async def delete_customer(
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_customer: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "delete_customer"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "delete_customer"})
         raise fetchErrorException
 
 # ---------------- All customers functions ----------------
@@ -170,7 +170,7 @@ async def create_current_user_workshop_customer(
         # If user has no workshop, raise 400
         if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop and tried to access customers",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customers"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_customers"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         
         # Create customer model
@@ -192,7 +192,7 @@ async def create_current_user_workshop_customer(
         raise   
     except Exception as e:
         logger.critical(f"Database error in create_current_user_workshop_customer: {e}", 
-                     extra={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop_customer"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "create_current_user_workshop_customer"})
         raise fetchErrorException
     
 async def get_current_user_workshop_customers(
@@ -211,7 +211,7 @@ async def get_current_user_workshop_customers(
         # If user has no workshop, raise 400
         if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop and tried to access customers",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customers"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_customers"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         # Query customers for the user's workshop
         result = await db.execute(
@@ -228,7 +228,7 @@ async def get_current_user_workshop_customers(
         raise   
     except Exception as e:
         logger.critical(f"Database error in get_current_user_workshop_customers: {e}", 
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customers"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_customers"})
         raise fetchErrorException
     
 async def get_current_user_workshop_customer_by_id(
@@ -245,7 +245,7 @@ async def get_current_user_workshop_customer_by_id(
         # If user has no workshop, raise 400
         if workshop_id == 1:   
             logger.error(f"Current user {current_user['user_id']} has no associated workshop and tried to access customer with ID {customer_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customer_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_customer_by_id"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         
         # Verify the customer belongs to the user's workshop
@@ -259,7 +259,7 @@ async def get_current_user_workshop_customer_by_id(
         # If customer not found or does not belong to user's workshop, raise 404
         if db_customer is None:
             logger.error(f"Customer with ID {customer_id} not found in workshop {workshop_id}", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customer_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_customer_by_id"})
             raise HTTPException(status_code=404, detail="Customer not found")
         
         logger.info(f"Customer with ID {customer_id} fetched for workshop {workshop_id}")
@@ -268,7 +268,7 @@ async def get_current_user_workshop_customer_by_id(
         raise
     except Exception as e:
         logger.critical(f"Database error in get_current_user_workshop_customer_by_id: {e}", 
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_customer_by_id"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_customer_by_id"})
         raise fetchErrorException
 
 async def update_current_user_workshop_customer_by_id(
@@ -287,7 +287,7 @@ async def update_current_user_workshop_customer_by_id(
         # If user has no workshop, raise 400
         if workshop_id == 1:   
             logger.error(f"Current user {current_user['user_id']} has no associated workshop and tried to update customer with ID {customer_id}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_customer_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_current_user_workshop_customer_by_id"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         
         # Verify the customer belongs to the user's workshop
@@ -301,7 +301,7 @@ async def update_current_user_workshop_customer_by_id(
         # If customer not found or does not belong to user's workshop, raise 404
         if customer_data is None:
             logger.error(f"Customer with ID {customer_id} not found in workshop {workshop_id}", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_customer_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_current_user_workshop_customer_by_id"})
             raise HTTPException(status_code=404, detail="Customer not found")
         # Update fields
         update_data = customer_update.model_dump(exclude_unset=True)
@@ -317,7 +317,7 @@ async def update_current_user_workshop_customer_by_id(
         raise
     except Exception as e:
         logger.critical(f"Database error in update_current_user_workshop_customer_by_id: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_customer_by_id"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "update_current_user_workshop_customer_by_id"})
         raise fetchErrorException
 
 async def delete_current_user_workshop_customer(
@@ -335,7 +335,7 @@ async def delete_current_user_workshop_customer(
         # If user has no workshop, raise 400
         if workshop_id == 1:
             logger.error("User does not have an associated workshop.",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_workshop_customer"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_current_user_workshop_customer"})
             raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
 
         # Verify the customer belongs to the user's workshop
@@ -351,7 +351,7 @@ async def delete_current_user_workshop_customer(
         # If customer not found in the workshop, raise 404
         if db_customer is None:
             logger.error(f"Customer with ID {customer_id} not found in workshop {workshop_id}", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_workshop_customer"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_current_user_workshop_customer"})
             raise HTTPException(status_code=404, detail="Customer not found")
         
         # Delete the customer
@@ -366,7 +366,7 @@ async def delete_current_user_workshop_customer(
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_current_user_workshop_customer: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_workshop_customer"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "delete_current_user_workshop_customer"})
         raise fetchErrorException
 
 async def assign_customer_to_car(
@@ -384,7 +384,7 @@ async def assign_customer_to_car(
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop",
-                         extra={"user_id": current_user["user_id"], "endpoint": "assign_customer_to_car"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "assign_customer_to_car"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         
         # First verify the customer belongs to the user's workshop
@@ -399,7 +399,7 @@ async def assign_customer_to_car(
         # If customer not found in the workshop, raise 404
         if not customer:
             logger.error(f"Customer with ID {customer_id} not found", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "assign_customer_to_car"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "assign_customer_to_car"})
             raise HTTPException(status_code=404, detail="Customer not found")
         # Now verify the car exists
         result = await db.execute(
@@ -410,7 +410,7 @@ async def assign_customer_to_car(
         # If car not found, raise 404
         if not car:
             logger.error(f"Car with ID {car_data.car_id} not found", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "assign_customer_to_car"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "assign_customer_to_car"})
             raise HTTPException(status_code=404, detail="Car not found")
         
         # Create relationship 
@@ -431,7 +431,7 @@ async def assign_customer_to_car(
         raise
     except Exception as e:
         logger.critical(f"Database error in assign_customer_to_car: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "assign_customer_to_car"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "assign_customer_to_car"})
         raise fetchErrorException
     
 async def get_cars_by_customer(
@@ -448,7 +448,7 @@ async def get_cars_by_customer(
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_cars_by_customer"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_cars_by_customer"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         
         # First verify the customer belongs to the user's workshop
@@ -462,7 +462,7 @@ async def get_cars_by_customer(
         # If customer not found in the workshop, raise 404
         if not customer:
             logger.error(f"Customer with ID {customer_id} not found in workshop {workshop_id}", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_cars_by_customer"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_cars_by_customer"})
             raise HTTPException(status_code=404, detail="Customer not found")
         
         # Now get the cars for this customer
@@ -476,7 +476,7 @@ async def get_cars_by_customer(
         raise
     except Exception as e:
         logger.critical(f"Database error in get_cars_by_customer: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_cars_by_customer"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_cars_by_customer"})
         raise fetchErrorException
     
 async def get_customer_full_car_info_by_id(
@@ -494,7 +494,7 @@ async def get_customer_full_car_info_by_id(
         # If no workshop associated, raise error
         if workshop_id == 1:
             logger.error(f"Current user {current_user['user_id']} has no associated workshop",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_customer_full_car_info_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_customer_full_car_info_by_id"})
             raise HTTPException(status_code=400, detail="Current user is not associated with any workshop")
         
         # Verify customer belongs to user's workshop
@@ -509,7 +509,7 @@ async def get_customer_full_car_info_by_id(
         # If customer not found in the workshop, raise 404
         if not customer_obj:
             logger.error(f"Customer with ID {customer_id} not found in workshop {workshop_id}", 
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_customer_full_car_info_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_customer_full_car_info_by_id"})
             raise HTTPException(status_code=404, detail="Customer not found")
         
         # Fetch full car info
@@ -540,5 +540,5 @@ async def get_customer_full_car_info_by_id(
         raise
     except Exception as e:
         logger.critical(f"Database error in get_customer_full_car_info: {e}",
-                     extra={"user_id": current_user["user_id"], "endpoint": "get_customer_full_car_info_by_id"})
+                     extra={"user_id": current_user['user_id'], "endpoint": "get_customer_full_car_info_by_id"})
         raise fetchErrorException

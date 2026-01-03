@@ -24,7 +24,7 @@ async def create_car(car: schemas.CarCreate, db: AsyncSession, current_user: dic
         return db_car
     except Exception as e:
         logger.critical(f"Database error in create_car: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "create_car"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "create_car"})
         raise HTTPException(status_code=500, detail=f"Error creating car: {e}")
     
 async def get_all_cars(current_user: dict, db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -43,7 +43,7 @@ async def get_all_cars(current_user: dict, db: AsyncSession, skip: int = 0, limi
         return cars
     except Exception as e:
         logger.critical(f"Database error in get_all_cars: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_all_cars"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_all_cars"})
         raise HTTPException(status_code=500, detail=f"Error fetching cars from database: {e}")
     
 async def get_car_by_id(current_user: dict, db: AsyncSession, car_id: int):
@@ -61,7 +61,7 @@ async def get_car_by_id(current_user: dict, db: AsyncSession, car_id: int):
         # If car not found, raise 404
         if db_car is None:
             logger.error(f"Car with ID: {car_id} not found by user ID: {current_user['user_id']}",
-                         extra={"car_id": car_id, "user_id": current_user["user_id"], "endpoint": "get_car_by_id"})
+                         extra={"car_id": car_id, "user_id": current_user['user_id'], "endpoint": "get_car_by_id"})
             raise HTTPException(status_code=404, detail="Car not found")
         logger.info(f"Car retrieved with ID: {car_id} by user ID: {current_user['user_id']}")
         return db_car
@@ -69,7 +69,7 @@ async def get_car_by_id(current_user: dict, db: AsyncSession, car_id: int):
         raise
     except Exception as e:
         logger.critical(f"Database error in get_car_by_id: {e}",
-                        extra={"car_id": car_id, "user_id": current_user["user_id"], "endpoint": "get_car_by_id"})
+                        extra={"car_id": car_id, "user_id": current_user['user_id'], "endpoint": "get_car_by_id"})
         raise HTTPException(status_code=500, detail=f"Error fetching car from database: {e}")
     
 async def update_car(current_user: dict, car_id: int, db: AsyncSession, car_update: schemas.CarUpdate):
@@ -93,7 +93,7 @@ async def update_car(current_user: dict, car_id: int, db: AsyncSession, car_upda
         raise
     except Exception as e:
         logger.critical(f"Database error in update_car: {e}",
-                        extra={"car_id": car_id, "user_id": current_user["user_id"], "endpoint": "update_car"})
+                        extra={"car_id": car_id, "user_id": current_user['user_id'], "endpoint": "update_car"})
         raise HTTPException(status_code=500, detail=f"Error updating car: {e}")
 
 async def delete_car(current_user: dict, db: AsyncSession, car_id: int):
@@ -116,5 +116,5 @@ async def delete_car(current_user: dict, db: AsyncSession, car_id: int):
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_car: {e}",
-                        extra={"car_id": car_id, "user_id": current_user["user_id"], "endpoint": "delete_car"})
+                        extra={"car_id": car_id, "user_id": current_user['user_id'], "endpoint": "delete_car"})
         raise HTTPException(status_code=500, detail=f"Error deleting car: {e}")

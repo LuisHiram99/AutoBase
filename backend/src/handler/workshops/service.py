@@ -32,7 +32,7 @@ async def create_workshop(
         raise
     except Exception as e:
         logger.critical(f"Database error in create_workshop: {e}", 
-                        extra={"user_id": current_user["user_id"], "endpoint": "create_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "create_workshop"})
         raise fetchErrorException
     
 async def get_all_workshops(
@@ -55,7 +55,7 @@ async def get_all_workshops(
         raise
     except Exception as e:
         logger.critical(f"Database error in get_all_workshops: {e}", 
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_all_workshops"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_all_workshops"})
         raise fetchErrorException
     
 async def get_workshop_by_id(
@@ -77,14 +77,14 @@ async def get_workshop_by_id(
         # If workshop not found, raise 404
         if db_workshop is None:
             logger.error(f"[ADMIN FUNC] Workshop ID: {workshop_id} not found by ADMIN user {current_user['user_id']}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_workshop_by_id"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_workshop_by_id"})
             raise notFoundException
         return db_workshop
     except HTTPException:
         raise
     except Exception as e:
         logger.critical(f"Database error in get_workshop_by_id: {e}", 
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_workshop_by_id"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_workshop_by_id"})
         raise fetchErrorException
     
 async def update_workshop(
@@ -104,7 +104,7 @@ async def update_workshop(
         # If workshop not found, raise 404
         if workshop_data is None:
             logger.error(f"[ADMIN FUNC] Workshop ID: {workshop_id} not found for update by ADMIN user {current_user['user_id']}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_workshop"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_workshop"})
             raise notFoundException
         # Prepare update data
         update_data = workshop_update.model_dump(exclude_unset=True)
@@ -120,7 +120,7 @@ async def update_workshop(
         raise
     except Exception as e:
         logger.critical(f"Database error in update_workshop: {e}", 
-                        extra={"user_id": current_user["user_id"], "endpoint": "update_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "update_workshop"})
         raise fetchErrorException
     
 async def delete_workshop(
@@ -138,7 +138,7 @@ async def delete_workshop(
         # If workshop not found, raise 404
         if workshop_data is None:
             logger.error(f"[ADMIN FUNC] Workshop ID: {workshop_id} not found for deletion by ADMIN user {current_user['user_id']}",
-                            extra={"user_id": current_user["user_id"], "endpoint": "delete_workshop"})
+                            extra={"user_id": current_user['user_id'], "endpoint": "delete_workshop"})
             raise notFoundException
         
         # Delete workshop from database
@@ -153,7 +153,7 @@ async def delete_workshop(
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_workshop: {e}", 
-                        extra={"user_id": current_user["user_id"], "endpoint": "delete_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "delete_workshop"})
         raise fetchErrorException
     
 # ---------------- End of all workshops functions FOR ADMINS ----------------
@@ -179,7 +179,7 @@ async def create_current_user_workshop(
         # If user already has a workshop, raise error
         if get_current_user_workshop_id(current_user) != 1:
             logger.error(f"User {current_user['user_id']} already has a workshop",
-                            extra={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop"})
+                            extra={"user_id": current_user['user_id'], "endpoint": "create_current_user_workshop"})
             raise HTTPException(status_code=400, detail="User already has a workshop")
         
         # Create workshop model
@@ -196,12 +196,12 @@ async def create_current_user_workshop(
 
         # Update user's workshop_id
         result = await db.execute(
-            select(models.User).filter(models.User.user_id == current_user["user_id"])
+            select(models.User).filter(models.User.user_id == current_user['user_id'])
         )
         db_user = result.scalar_one_or_none()
         if db_user is None:
             logger.error(f"User {current_user['user_id']} not found when assigning workshop",
-                         extra={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "create_current_user_workshop"})
             raise HTTPException(status_code=404, detail="User not found")
 
         db_user.workshop_id = create_workshop_model.workshop_id
@@ -216,7 +216,7 @@ async def create_current_user_workshop(
         raise
     except Exception as e:
         logger.critical(f"Database error in create_current_user_workshop: {e}", 
-                        extra={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "create_current_user_workshop"})
         raise fetchErrorException
 
 
@@ -233,7 +233,7 @@ async def upload_current_user_workshop_logo(
         logger.debug(f"Uploading logo for user {current_user['user_id']}")
         if get_current_user_workshop_id(current_user) == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to upload logo for",
-                         extra={"user_id": current_user["user_id"], "endpoint": "upload_current_user_workshop_logo"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "upload_current_user_workshop_logo"})
             raise HTTPException(status_code=400, detail="User has no workshop to update")
         
         # Validate file type
@@ -241,7 +241,7 @@ async def upload_current_user_workshop_logo(
         file_extension = Path(logo_file.filename).suffix.lower()
         if file_extension not in allowed_extensions:
             logger.error(f"User {current_user['user_id']} attempted to upload invalid file type: {file_extension}",
-                            extra={"user_id": current_user["user_id"], "endpoint": "upload_current_user_workshop_logo"})
+                            extra={"user_id": current_user['user_id'], "endpoint": "upload_current_user_workshop_logo"})
             raise HTTPException(
                 status_code=400, 
                 detail="Invalid file type. Only JPG, PNG, GIF, and WebP files are allowed."
@@ -262,7 +262,7 @@ async def upload_current_user_workshop_logo(
                 f.write(content)
         except Exception as e:
             logger.error(f"Failed to save logo file for user {current_user['user_id']}: {e}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "upload_current_user_workshop_logo"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "upload_current_user_workshop_logo"})
             raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
         
         # Create URL path for database
@@ -278,7 +278,7 @@ async def upload_current_user_workshop_logo(
             if file_path.exists():
                 file_path.unlink()
             logger.error(f"Workshop for user {current_user['user_id']} not found when uploading logo",
-                         extra={"user_id": current_user["user_id"], "endpoint": "upload_current_user_workshop_logo"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "upload_current_user_workshop_logo"})
             raise HTTPException(status_code=404, detail="Workshop not found")
         
         # Remove old logo file if it exists
@@ -292,7 +292,7 @@ async def upload_current_user_workshop_logo(
         
         db_workshop.workshop_logo = logo_url
         logger.info(f"User {current_user['user_id']} uploaded new logo for workshop {db_workshop.workshop_id}",
-                    extra={"user_id": current_user["user_id"], "endpoint": "upload_current_user_workshop_logo"})
+                    extra={"user_id": current_user['user_id'], "endpoint": "upload_current_user_workshop_logo"})
         # Commit changes to database
         await db.commit()
         await db.refresh(db_workshop)
@@ -301,7 +301,7 @@ async def upload_current_user_workshop_logo(
         raise
     except Exception as e:
         logger.critical(f"Database error in upload_current_user_workshop_logo: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "upload_current_user_workshop_logo"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "upload_current_user_workshop_logo"})
         raise fetchErrorException
 
 
@@ -316,7 +316,7 @@ async def get_current_user_workshop_logo(
         logger.debug(f"Fetching logo for user {current_user['user_id']}")
         if get_current_user_workshop_id(current_user) == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to fetch logo for",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_logo"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_logo"})
             raise HTTPException(status_code=400, detail="User has no workshop")
         
         # Get workshop logo
@@ -327,7 +327,7 @@ async def get_current_user_workshop_logo(
         # If workshop not found, raise 404
         if not workshop:
             logger.error(f"Workshop for user {current_user['user_id']} not found when fetching logo",
-                            extra={"user_id": current_user["user_id"],   "endpoint": "get_current_user_workshop_logo"})
+                            extra={"user_id": current_user['user_id'],   "endpoint": "get_current_user_workshop_logo"})
             raise notFoundException
         
         logger.info(f"User {current_user['user_id']} fetched logo for workshop {workshop.workshop_id}")
@@ -339,7 +339,7 @@ async def get_current_user_workshop_logo(
         raise
     except Exception as e:
         logger.critical(f"Database error in get_current_user_workshop_logo: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_logo"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_logo"})
         raise fetchErrorException
 
 
@@ -354,7 +354,7 @@ async def get_current_user_workshop(
         logger.debug(f"Fetching workshop for user {current_user['user_id']}")
         if current_user['workshop_id'] == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to fetch",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop"})
             raise HTTPException(status_code=400, detail="User has no workshop")
 
         result = await db.execute(
@@ -364,7 +364,7 @@ async def get_current_user_workshop(
 
         if not workshop:
             logger.error(f"Workshop for user {current_user['user_id']} not found when fetching",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop"})
             raise notFoundException
         logger.info(f"User {current_user['user_id']} fetched workshop {workshop.workshop_id}")
         return [workshop]  # Return as list to match endpoint response type
@@ -372,7 +372,7 @@ async def get_current_user_workshop(
         raise
     except Exception as e:
         logger.critical(f"Database error in get_current_user_workshop: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop"})
         raise fetchErrorException
 
 async def patch_current_user_workshop(
@@ -387,7 +387,7 @@ async def patch_current_user_workshop(
         logger.debug(f"Updating workshop for user {current_user['user_id']}")
         if current_user["workshop_id"] == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to update",
-                         extra={"user_id": current_user["user_id"], "endpoint": "patch_current_user_workshop"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "patch_current_user_workshop"})
             raise HTTPException(status_code=400, detail="User has no workshop to update")
         
         # Query workshop by current user's workshop_id
@@ -398,7 +398,7 @@ async def patch_current_user_workshop(
         # if no workshop found, raise 404
         if not db_workshop:
             logger.error(f"Workshop for user {current_user['user_id']} not found when updating",
-                            extra={"user_id": current_user["user_id"], "endpoint": "patch_current_user_workshop"})
+                            extra={"user_id": current_user['user_id'], "endpoint": "patch_current_user_workshop"})
             raise HTTPException(status_code=404, detail="Workshop not found")
         
 
@@ -415,7 +415,7 @@ async def patch_current_user_workshop(
         raise
     except Exception as e:
         logger.critical(f"Database error in patch_current_user_workshop: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "patch_current_user_workshop"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "patch_current_user_workshop"})
         raise fetchErrorException
 # ---------------- End of current user's workshop functions ----------------
 
@@ -435,7 +435,7 @@ async def create_current_user_workshop_part(
 
         if workshop_id == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to add part to",
-                         extra={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop_part"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "create_current_user_workshop_part"})
             raise HTTPException(status_code=400, detail="User has no workshop to add parts to")
         
         # Check if this part already exists in the workshop
@@ -451,7 +451,7 @@ async def create_current_user_workshop_part(
         # If the part already exists, raise error   
         if existing_part:
             logger.error(f"Part {part.part_id} already exists in workshop {workshop_id} for user {current_user['user_id']}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop_part"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "create_current_user_workshop_part"})
             raise HTTPException(
                 status_code=400,
                 detail=f"Part with ID {part.part_id} already exists in this workshop. Use PATCH to update it."
@@ -499,7 +499,7 @@ async def create_current_user_workshop_part(
         raise  
     except Exception as e:
         logger.critical(f"Database error in create_current_user_workshop_part: {e}",
-                        extra ={"user_id": current_user["user_id"], "endpoint": "create_current_user_workshop_part"})
+                        extra ={"user_id": current_user['user_id'], "endpoint": "create_current_user_workshop_part"})
         raise fetchErrorException
 
 async def get_current_user_workshop_parts(
@@ -517,7 +517,7 @@ async def get_current_user_workshop_parts(
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to fetch parts from",
-                         extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_parts"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_parts"})
             raise HTTPException(status_code=400, detail="User has no workshop to fetch parts from")
         
         # Query parts with join to get part details
@@ -550,7 +550,7 @@ async def get_current_user_workshop_parts(
         raise  
     except Exception as e:
         logger.critical(f"Database error in get_current_user_workshop_parts: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop_parts"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "get_current_user_workshop_parts"})
         raise fetchErrorException
 
 async def update_current_user_workshop_part(
@@ -568,7 +568,7 @@ async def update_current_user_workshop_part(
 
         if workshop_id == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to update part in",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_part"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_current_user_workshop_part"})
             raise HTTPException(status_code=400, detail="User has no workshop to update parts in")
 
         # Query to get the parts in the workshop by ID
@@ -586,7 +586,7 @@ async def update_current_user_workshop_part(
         # If part not found, raise 404
         if not part_data:
             logger.error(f"Part {part_id} not found in workshop {workshop_id} for user {current_user['user_id']}",
-                         extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_part"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "update_current_user_workshop_part"})
             raise HTTPException(status_code=404, detail="Part not found in this workshop")
         
         # Update fields
@@ -616,7 +616,7 @@ async def update_current_user_workshop_part(
         raise
     except Exception as e:
         logger.critical(f"Database error in update_current_user_workshop_part: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "update_current_user_workshop_part"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "update_current_user_workshop_part"})
         raise fetchErrorException
 
 async def delete_current_user_workshop_part(
@@ -633,7 +633,7 @@ async def delete_current_user_workshop_part(
         workshop_id = get_current_user_workshop_id(current_user)
         if workshop_id == 1:
             logger.error(f"User {current_user['user_id']} has no workshop to delete part from",
-                         extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_workshop_part"})
+                         extra={"user_id": current_user['user_id'], "endpoint": "delete_current_user_workshop_part"})
             raise HTTPException(status_code=400, detail="User has no workshop to delete parts from")
         
         # Query to get the part in the workshop by ID
@@ -651,7 +651,7 @@ async def delete_current_user_workshop_part(
         #If part not found, raise 404
         if not part_data:
             logger.error(f"Part {part_id} not found in workshop {workshop_id} for user {current_user['user_id']}",
-                            extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_workshop_part"})
+                            extra={"user_id": current_user['user_id'], "endpoint": "delete_current_user_workshop_part"})
             raise HTTPException(status_code=404, detail="Part not found in this workshop")
         
         part_workshop, part = part_data
@@ -680,5 +680,5 @@ async def delete_current_user_workshop_part(
         raise
     except Exception as e:
         logger.critical(f"Database error in delete_current_user_workshop_part: {e}",
-                        extra={"user_id": current_user["user_id"], "endpoint": "delete_current_user_workshop_part"})
+                        extra={"user_id": current_user['user_id'], "endpoint": "delete_current_user_workshop_part"})
         raise fetchErrorException
