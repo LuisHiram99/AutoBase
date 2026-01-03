@@ -78,10 +78,10 @@ def upgrade() -> None:
         )
 
     elif environment == "production":
+        admin_password = os.getenv("ADMIN_PASSWORD")
         # Hash default admin password using passlib (argon2)
         pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-        hashed_admin = pwd_context.hash("admin")
-        hashed_manager = pwd_context.hash("manager")
+        hashed_admin = pwd_context.hash(admin_password)
 
         # Use a connection to execute with parameters
         bind = op.get_bind()
@@ -98,7 +98,7 @@ def upgrade() -> None:
                 "first_name": "Admin",
                 "last_name": "User",
                 "email": "administrator1224@mail.com",
-                "role": "Y0eR89$%Uv",
+                "role": "admin",
                 "hashed_password": hashed_admin,
                 "workshop_id": 1,
             }
