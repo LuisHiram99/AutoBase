@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
+from fastapi import APIRouter, Depends, Request, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from typing import List, Annotated
+from typing import List 
 from auth.auth import get_current_user, is_admin, admin_required
 from . import service
 from ..rate_limiter import limiter

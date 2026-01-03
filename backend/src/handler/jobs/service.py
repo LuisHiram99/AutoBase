@@ -1,39 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-
-from auth.auth import get_current_user, pwd_context, admin_required, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from datetime import timedelta
+from sqlalchemy import select
 from db import models, schemas
-from exceptions.exceptions import notFoundException, fetchErrorException
-from db.database import get_db
-
+from exceptions.exceptions import fetchErrorException
 from ..workshops.service import get_current_user_workshop_id
-
 from db import models, schemas
-from db.database import get_db
+from logger.logger import get_logger
 
-router = APIRouter(tags=["workers"])
-
-def validate_job_fields(job: schemas.JobCreateForWorkshop | schemas.JobUpdate):
-    """
-    Validate required fields for creating or updating a job
-    """
-    if isinstance(job, schemas.JobCreateForWorkshop):
-        if not job.invoice or not job.invoice.strip():
-            raise HTTPException(status_code=422, detail="Invoice cannot be empty")
-        if len(job.invoice) > 50:
-            raise HTTPException(status_code=422, detail="Invoice exceeds maximum length of 50 characters")
-        if job.service_description and len(job.service_description) > 255:
-            raise HTTPException(status_code=422, detail="Service description exceeds maximum length of 255 characters")
-    elif isinstance(job, schemas.JobUpdate):
-        if job.invoice is not None:
-            if not job.invoice.strip():
-                raise HTTPException(status_code=422, detail="Invoice cannot be empty")
-            if len(job.invoice) > 50:
-                raise HTTPException(status_code=422, detail="Invoice exceeds maximum length of 50 characters")
-        if job.service_description is not None and len(job.service_description) > 255:
-            raise HTTPException(status_code=422, detail="Service description exceeds maximum length of 255 characters")
+logger = get_logger()
 
 # ---------------- BEGIN Jobs info functions ----------------
 async def create_job_for_current_user_workshop(
@@ -45,9 +19,14 @@ async def create_job_for_current_user_workshop(
     Create a job for the current logged-in user's workshop
     """
     try:
-        validate_job_fields(job)
-
+        logger.debug(f"Attempting to create job for workshop by user ID: {current_user['user_id']}")
+        # Get the workshop ID associated with the current user
         workshop_id = get_current_user_workshop_id(current_user)
+        # If user has no workshop, raise error
+        if workshop_id == 1:
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
 
         # Validate that customer_car exists and belongs to a customer in the user's workshop
         result = await db.execute(
@@ -59,11 +38,13 @@ async def create_job_for_current_user_workshop(
         customer_car_data = result.first()
         
         if not customer_car_data:
+            logger.error(f"Customer car ID {job.customer_car_id} not found in workshop ID {workshop_id}",
+                         extra={"user_id": current_user["user_id"], "endpoint": "create_job_for_current_user_workshop"})
             raise HTTPException(
                 status_code=404, 
                 detail="Customer car not found in your workshop"
             )
-        
+        # Create the job
         create_job_model = models.Job(
             customer_car_id=job.customer_car_id,
             invoice=job.invoice,
@@ -71,17 +52,20 @@ async def create_job_for_current_user_workshop(
             start_date=job.start_date,
             end_date=job.end_date,
             status=job.status,
-            workshop_id=workshop_id  # Set automatically from user's workshop
+            workshop_id=workshop_id  
         )
-
+        # Add and commit the new job to the database
         db.add(create_job_model)
         await db.commit()
         await db.refresh(create_job_model)
+        logger.info(f"Successfully created job ID {create_job_model.job_id} in workshop ID {workshop_id}",
+                    extra={"user_id": current_user["user_id"], "endpoint": "create_job_for_current_user_workshop"})
         return create_job_model
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Database error in create_job_for_current_user_workshop: {e}")
+        logger.critical(f"Database error in create_job_for_current_user_workshop: {e}",
+                        extra={"user_id": current_user["user_id"], "endpoint": "create_job_for_current_user_workshop"})
         raise fetchErrorException
 
 async def get_all_jobs_for_current_user_workshop(
@@ -93,7 +77,16 @@ async def get_all_jobs_for_current_user_workshop(
     Construct a query to get all jobs for the current user's workshop with car information
     '''
     try:
+        logger.debug(f"Attempting to retrieve all jobs for workshop by user ID: {current_user['user_id']}")
+        # Get the workshop ID associated with the current user
         workshop_id = get_current_user_workshop_id(current_user)
+        # If user has no workshop, raise error
+        if workshop_id == 1:
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.") 
+        
+        # Query to get jobs with car information
         result = await db.execute(
             select(
                 models.Job,
@@ -106,6 +99,7 @@ async def get_all_jobs_for_current_user_workshop(
             .offset(skip)
             .limit(limit)
         )
+        # Query result
         jobs_data = result.all()
         
         if not jobs_data:
@@ -130,10 +124,14 @@ async def get_all_jobs_for_current_user_workshop(
             )
             for job, car, customer_car in jobs_data
         ]
-        
+        logger.info(f"Successfully retrieved {len(jobs_with_car_info)} jobs for workshop ID {workshop_id}",
+                    extra={"user_id": current_user["user_id"], "endpoint": "get_all_jobs_for_current_user_workshop"})
         return jobs_with_car_info
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"Database error in get_all_jobs_for_current_user_workshop: {e}")
+        logger.critical(f"Database error in get_all_jobs_for_current_user_workshop: {e}",
+                        extra={"user_id": current_user["user_id"], "endpoint": "get_all_jobs_for_current_user_workshop"})
         raise fetchErrorException
     
 
@@ -142,8 +140,20 @@ async def get_job_by_id(
         current_user: dict,
         db: AsyncSession,
 ):
+    """
+    Get a job by ID for the current user's workshop
+    """
     try:
+        logger.debug(f"Attempting to retrieve job with ID: {job_id} by user ID: {current_user['user_id']}")
+        # Get the workshop ID associated with the current user
         workshop_id = get_current_user_workshop_id(current_user)
+        # If user has no workshop, raise error
+        if workshop_id == 1:
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
+        
+        # Query to get the job with car information
         result = await db.execute(
             select(
                 models.Job,
@@ -155,13 +165,17 @@ async def get_job_by_id(
             .where(models.Job.workshop_id == workshop_id)
             .where(models.Job.job_id == job_id)
         )
-
+        # Query result
         job_data = result.first()
+
+        # If job not found, raise 404
         if job_data is None:
-            raise notFoundException
+            logger.error(f"Job ID {job_id} not found in workshop ID {workshop_id}",
+                         extra={"user_id": current_user["user_id"], "endpoint": "get_job_by_id"})   
+            raise HTTPException(status_code=404, detail="Job not found in your workshop.")
         
         job, car, customer_car = job_data
-        
+        logger.info(f"Successfully retrieved job ID {job_id} in workshop ID {workshop_id}")
         # Build response with car information
         return schemas.JobWithCarInfo(
             job_id=job.job_id,
@@ -181,7 +195,8 @@ async def get_job_by_id(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Database error while retrieving job information: {e}")
+        logger.critical(f"Database error while retrieving job information: {e}",
+                        extra={"user_id": current_user["user_id"], "endpoint": "get_job_by_id"})
         raise fetchErrorException
 
 async def update_job_info(
@@ -194,8 +209,16 @@ async def update_job_info(
     Update a job's information for the current user's workshop
     """
     try:
-        validate_job_fields(job_update)
+        logger.debug(f"Attempting to update job with ID: {job_id} by user ID: {current_user['user_id']}")
+
+        # Get the workshop ID associated with the current user
         workshop_id = get_current_user_workshop_id(current_user)
+        if workshop_id == 1:
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
+        
+        # Check if the job exists and belongs to the user's workshop
         result = await db.execute(
             select(models.Job).where(
                 models.Job.job_id == job_id,
@@ -203,20 +226,27 @@ async def update_job_info(
             )
         )
         db_job = result.scalars().first()
+        # If job not found, raise 404
         if not db_job:
-            raise notFoundException  # Don't pass message if it's HTTPException
+            logger.error(f"Job ID {job_id} not found in workshop ID {workshop_id}",
+                         extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
+            raise HTTPException(status_code=404, detail="Job not found in your workshop.")        
         
+        # Update job fields
         update_data = job_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_job, field, value)
-
+        # commit changes to dabase
         await db.commit()
         await db.refresh(db_job)
-        return db_job  # Return just db_job, not tuple
+        logger.info(f"Successfully updated job ID {job_id} in workshop ID {workshop_id}",
+                    extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
+        return db_job  
     except HTTPException:
-        raise  # Let HTTPExceptions propagate
+        raise  
     except Exception as e:
-        print(f"Database error in update_job_info: {e}")
+        logger.critical(f"Database error in update_job_info: {e}",
+                        extra={"user_id": current_user["user_id"], "endpoint": "update_job_info"})
         raise fetchErrorException
     
 async def delete_job(
@@ -228,7 +258,15 @@ async def delete_job(
     Delete a job for the current user's workshop
     """
     try:
+        logger.debug(f"Attempting to delete job with ID: {job_id}")
+
         workshop_id = get_current_user_workshop_id(current_user)
+        if workshop_id == 1:
+            logger.error("User does not have an associated workshop.",
+                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+            raise HTTPException(status_code=400, detail="User does not have an associated workshop.")
+        
+        # Check if the job exists and belongs to the user's workshop
         result = await db.execute(
             select(models.Job).where(
                 models.Job.job_id == job_id,
@@ -236,14 +274,21 @@ async def delete_job(
             )
         )
         db_job = result.scalars().first()
+        # If job not found, raise notFoundException
         if not db_job:
-            raise notFoundException  # Don't pass message if it's HTTPException
+            logger.error(f"Job ID {job_id} not found in workshop ID {workshop_id}",
+                         extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
+            raise HTTPException(status_code=404, detail="Job not found in your workshop.") 
         
+        # Proceed to delete the job
         await db.delete(db_job)
         await db.commit()
+
+        logger.info(f"Successfully deleted job ID {job_id} from workshop ID {workshop_id}")
         return {"message": "Job deleted successfully", "job_id": job_id}
     except HTTPException:
-        raise  # Let HTTPExceptions propagate
+        raise  
     except Exception as e:
-        print(f"Database error in delete_job: {e}")
+        logger.critical(f"Database error in delete_job: {e}",
+                     extra={"user_id": current_user["user_id"], "endpoint": "delete_job"})
         raise fetchErrorException

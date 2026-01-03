@@ -1,10 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from typing import List, Annotated
-from auth.auth import get_current_user, admin_required, pwd_context
-from auth.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from datetime import timedelta
+from typing import List
+from auth.auth import get_current_user, is_admin
 from . import service
 from ..rate_limiter import limiter
 
@@ -35,6 +32,8 @@ async def read_workers(
     skip: int = 0,
     limit: int = 100
 ):
+    if is_admin(current_user):
+        return await service.get_all_workers(db, skip, limit)
     return await service.get_all_workers_for_current_user_workshop(db, current_user, skip, limit)
 
 @router.get("/workers/{worker_id}", response_model=schemas.Worker)

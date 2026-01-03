@@ -1,13 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
 from typing import Annotated, List
-from auth.auth import get_current_user, pwd_context, admin_required
+from auth.auth import get_current_user, admin_required
 from . import service
-from exceptions.exceptions import notAdminException, notFoundException
 from ..rate_limiter import limiter
 
-from db import models, schemas, database
+from db import schemas
 from db.database import get_db
 
 router = APIRouter()
@@ -42,9 +40,9 @@ async def read_user(
     """
     return await service.get_user_by_id(user, db, user_id)
 
-@router.put("/users/{user_id}", response_model=schemas.User, summary="Update user by ID")
+@router.patch("/users/{user_id}", response_model=schemas.User, summary="Update user by ID")
 @limiter.limit("15/minute")
-async def update_user(
+async def patch_user(
     request: Request,
     user_id: int,
     user_update: schemas.UserUpdate,

@@ -12,7 +12,7 @@ class TestCurrentUser:
             "first_name": "Current",
             "last_name": "User",
             "email": "currentuser@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201
@@ -20,7 +20,7 @@ class TestCurrentUser:
         # Now, login to get the token
         login_data = {
             "username": "currentuser@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -49,7 +49,7 @@ class TestCurrentUser:
             "first_name": "Patch",
             "last_name": "User",
             "email": "patchuser@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201
@@ -57,7 +57,7 @@ class TestCurrentUser:
         # Now, login to get the token
         login_data = {
             "username": "patchuser@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -92,14 +92,14 @@ class TestCurrentUser:
             "first_name": "Invalid",
             "last_name": "Data",
             "email": "invaliddata@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201
         # Now, login to get the token
         login_data = {
             "username": "invaliddata@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -119,14 +119,14 @@ class TestCurrentUser:
             "first_name": "Delete",
             "last_name": "User",
             "email": "delete@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201
         # Now, login to get the token
         login_data = {
             "username": "delete@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -144,7 +144,7 @@ class TestCurrentUser:
             "first_name": "Token",
             "last_name": "Version",
             "email": "tokenversion@mail.com",
-            "password": "initialpassword"
+            "password": "Initialpassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201
@@ -152,7 +152,7 @@ class TestCurrentUser:
         user = result.scalar_one()
         original_token_version = user.token_version
         # Simulate password change
-        user.hashed_password = auth.pwd_context.hash("newpassword")
+        user.hashed_password = auth.pwd_context.hash("Newpassword20%")
         user.token_version += 1
         db_session.add(user)
         await db_session.commit()

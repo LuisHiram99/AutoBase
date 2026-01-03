@@ -1,5 +1,4 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, PrimaryKeyConstraint, DateTime, func
-from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 from .database import Base
 import enum
@@ -37,7 +36,7 @@ class Customer(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     phone = Column(String(20), nullable=False)
-    email = Column(String)
+    email = Column(String(100))
     workshop_id = Column(Integer, ForeignKey("workshops.workshop_id"), nullable=False)
 
 
@@ -88,7 +87,7 @@ class CustomerCar(Base):
     __tablename__ = "customer_car"
 
     customer_car_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.customer_id", ondelete="CASCADE"), nullable=False)
     car_id = Column(Integer, ForeignKey("cars.car_id"), nullable=False)
     license_plate = Column(String(20), nullable=False)
     color = Column(String(50))

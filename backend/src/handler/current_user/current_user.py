@@ -1,12 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from typing import List, Annotated
-from auth.auth import get_current_user, admin_required, pwd_context
-from auth.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from datetime import timedelta
+from typing import Annotated
 from . import service
 from ..rate_limiter import limiter
+from auth.auth import get_current_user
 
 
 

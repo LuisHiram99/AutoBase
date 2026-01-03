@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
 from typing import List, Union
-from auth.auth import admin_required, get_current_user, is_admin
+from auth.auth import get_current_user, is_admin
 from . import service
 from ..rate_limiter import limiter
 
-from db import models, schemas, database
+from db import schemas
 from db.database import get_db
 
 router = APIRouter()
