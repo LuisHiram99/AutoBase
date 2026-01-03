@@ -11,7 +11,6 @@ from passlib.context import CryptContext
 from db.database import get_db
 from db.models import User
 from starlette import status
-from db.database import async_session
 from secrets import token_hex
 import os
 from pathlib import Path
@@ -38,10 +37,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 class CreateUserRequest(BaseModel):
-    first_name: str = Field(..., example="John", min_length=2, max_length=100)
-    last_name: str = Field(..., example="Doe", min_length=2, max_length=100)
-    email: EmailStr = Field(..., example="john@example.com", max_length=100)
-    password: str = Field(..., example="Secretpassword1!", min_length=10, max_length=100)
+    first_name: str = Field(..., min_length=2, max_length=100)
+    last_name: str = Field(..., min_length=2, max_length=100)
+    email: EmailStr = Field(..., max_length=100)
+    password: str = Field(..., min_length=10, max_length=100)
 
     @field_validator('password')
     @classmethod
@@ -54,6 +53,16 @@ class CreateUserRequest(BaseModel):
             raise ValueError('Must contain special character')
         return v
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "john@example.com",
+                "password": "Secretpassword1!"
+            }
+        }
+    }
 class Token(BaseModel):
     access_token: str
     token_type: str

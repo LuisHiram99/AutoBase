@@ -2,74 +2,84 @@ import pytest
 import pytest_asyncio
 from db import models
 from sqlalchemy import select
+from jose import jwt
+from auth import auth
 
 
 class TestCustomersIntegration:
     """Integration tests for customers endpoints testing complete workflow from API to database"""
     
     @pytest_asyncio.fixture
-    async def admin_user_token(self, client, db_session, _setup_workshop):
-        """Create an admin user and return authentication token"""
+    async def admin_user_token(self, client, db_session):
+        """Create an admin user with their own workshop and return authentication token"""
         from auth.auth import pwd_context
         
-        # Get the workshop_id from setup
         async with db_session as session:
-            from sqlalchemy import select
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            workshop_id = default_workshop.workshop_id
-        
-        # Create admin user directly in database
-        async with db_session as session:
+            # Create a dedicated workshop for admin
+            admin_workshop = models.Workshop(
+                workshop_name="Admin CustomerCar Workshop",
+                address="123 Admin St",
+                opening_hours="09:00",
+                closing_hours="18:00"
+            )
+            session.add(admin_workshop)
+            await session.commit()
+            await session.refresh(admin_workshop)
+            
+            # Create admin user with their workshop
             admin_user = models.User(
                 first_name="Admin",
                 last_name="User",
-                email="admin@test.com",
-                hashed_password=pwd_context.hash("adminpass123"),
+                email="admin_customercar@test.com",
+                hashed_password=pwd_context.hash("AdminPass123%"),
                 role="admin",
-                workshop_id=workshop_id
+                workshop_id=admin_workshop.workshop_id
             )
             session.add(admin_user)
             await session.commit()
         
         # Login to get token
         login_data = {
-            "username": "admin@test.com",
-            "password": "adminpass123"
+            "username": "admin_customercar@test.com",
+            "password": "AdminPass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
         return response.json()["access_token"]
 
     @pytest_asyncio.fixture
-    async def manager_user_token(self, client, db_session, _setup_workshop):
-        """Create a manager user and return authentication token"""
+    async def manager_user_token(self, client, db_session):
+        """Create a manager user with their own workshop and return authentication token"""
         from auth.auth import pwd_context
         
-        # Get the workshop_id from setup
         async with db_session as session:
-            from sqlalchemy import select
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            workshop_id = default_workshop.workshop_id
-        
-        # Create manager user directly in database
-        async with db_session as session:
+            # Create a dedicated workshop for manager
+            manager_workshop = models.Workshop(
+                workshop_name="Manager CustomerCar Workshop",
+                address="456 Manager Ave",
+                opening_hours="08:00",
+                closing_hours="17:00"
+            )
+            session.add(manager_workshop)
+            await session.commit()
+            await session.refresh(manager_workshop)
+            
+            # Create manager user with their workshop
             manager_user = models.User(
                 first_name="Manager",
                 last_name="User",
-                email="manager@test.com",
-                hashed_password=pwd_context.hash("managerpass123"),
+                email="manager_customercar@test.com",
+                hashed_password=pwd_context.hash("ManagerPass123%"),
                 role=models.RoleEnum.manager,
-                workshop_id=workshop_id
+                workshop_id=manager_workshop.workshop_id
             )
             session.add(manager_user)
             await session.commit()
         
         # Login to get token
         login_data = {
-            "username": "manager@test.com",
-            "password": "managerpass123"
+            "username": "manager_customercar@test.com",
+            "password": "ManagerPass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -102,6 +112,19 @@ class TestCustomersIntegration:
             default_workshop = result.scalar_one()
             return default_workshop.workshop_id
 
+    async def get_user_workshop_id_from_token(self, token, db_session):
+        """Helper method to get workshop_id from JWT token"""
+        # Decode the token
+        payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        user_id = payload.get("user_id")
+        
+        # Query database for user's workshop_id
+        async with db_session as session:
+            result = await session.execute(
+                select(models.User).where(models.User.user_id == user_id)
+            )
+            user = result.scalar_one()
+            return user.workshop_id
     # ================== CREATE CUSTOMER TESTS ==================
 
     @pytest.mark.asyncio
@@ -143,8 +166,8 @@ class TestCustomersIntegration:
     @pytest.mark.asyncio
     async def test_create_customer_as_manager_without_workshop_id(self, client, manager_user_token, db_session):
         """Test manager user creating customer for their own workshop"""
-        workshop_id = await self.get_default_workshop_id(db_session)
-        
+        workshop_id = await self.get_user_workshop_id_from_token(manager_user_token, db_session)
+
         headers = self.auth_headers(manager_user_token)
         customer_data = {
             "first_name": "Jane",
@@ -270,9 +293,7 @@ class TestCustomersIntegration:
         # Create customers in different workshops  
         async with db_session as session:
             # Get default workshop ID
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            default_workshop_id = default_workshop.workshop_id
+            manager_workshop_id = await self.get_user_workshop_id_from_token(manager_user_token, db_session)
             
             # Create second workshop
             workshop2 = models.Workshop(
@@ -290,7 +311,7 @@ class TestCustomersIntegration:
                 last_name="One",
                 phone="555-3333",
                 email="worker_workshop1@test.com",
-                workshop_id=default_workshop_id  # Same workshop as worker
+                workshop_id=manager_workshop_id  # Same workshop as worker
             )
             customer2 = models.Customer(
                 first_name="Workshop", 
@@ -378,9 +399,7 @@ class TestCustomersIntegration:
         """Test worker can only get customers from their own workshop"""
         async with db_session as session:
             # Get default workshop ID
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            default_workshop_id = default_workshop.workshop_id
+            manager_workshop_id = await self.get_user_workshop_id_from_token(manager_user_token, db_session)    
             
             # Create second workshop
             workshop2 = models.Workshop(
@@ -399,7 +418,7 @@ class TestCustomersIntegration:
                 last_name="Workshop",
                 phone="555-5555",
                 email="same_workshop_customer@test.com",
-                workshop_id=default_workshop_id
+                workshop_id=manager_workshop_id
             )
             # Customer in different workshop
             customer2 = models.Customer(
@@ -579,9 +598,7 @@ class TestCustomersIntegration:
         """Test worker can only delete customers from their own workshop"""
         async with db_session as session:
             # Get default workshop ID
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            default_workshop_id = default_workshop.workshop_id
+            manager_workshop_id = await self.get_user_workshop_id_from_token(manager_user_token, db_session)
             
             # Create second workshop
             workshop2 = models.Workshop(
@@ -600,7 +617,7 @@ class TestCustomersIntegration:
                 last_name="Delete",
                 phone="555-1010",
                 email="can_delete_customer@test.com",
-                workshop_id=default_workshop_id
+                workshop_id=manager_workshop_id
             )
             # Customer in different workshop
             customer2 = models.Customer(
@@ -630,7 +647,7 @@ class TestCustomersIntegration:
     @pytest.mark.asyncio
     async def test_add_car_to_customer(self, client, admin_user_token, db_session):
         """Test adding a car to a customer"""
-        workshop_id = await self.get_default_workshop_id(db_session)
+        workshop_id = await self.get_user_workshop_id_from_token(admin_user_token, db_session)
         
         async with db_session as session:
             # Create customer
@@ -683,7 +700,7 @@ class TestCustomersIntegration:
     @pytest.mark.asyncio
     async def test_get_customer_cars(self, client, admin_user_token, db_session):
         """Test getting all cars associated with a customer"""
-        workshop_id = await self.get_default_workshop_id(db_session)
+        workshop_id = await self.get_user_workshop_id_from_token(admin_user_token, db_session)
         
         async with db_session as session:
             # Create customer
@@ -738,7 +755,7 @@ class TestCustomersIntegration:
     @pytest.mark.asyncio
     async def test_get_customer_cars_empty_list(self, client, admin_user_token, db_session):
         """Test getting cars for customer with no cars returns empty list"""
-        workshop_id = await self.get_default_workshop_id(db_session)
+        workshop_id = await self.get_user_workshop_id_from_token(admin_user_token, db_session)
         
         async with db_session as session:
             customer = models.Customer(

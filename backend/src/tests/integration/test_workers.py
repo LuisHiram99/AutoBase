@@ -2,75 +2,84 @@ import pytest
 import pytest_asyncio
 from db import models
 from sqlalchemy import select
-import time
+from jose import jwt
+from auth import auth
 
 
 class TestWorkersIntegration:
     """Integration tests for workers endpoints testing complete workflow from API to database"""
     
     @pytest_asyncio.fixture
-    async def admin_user_token(self, client, db_session, _setup_workshop):
-        """Create an admin user and return authentication token"""
+    async def admin_user_token(self, client, db_session):
+        """Create an admin user with their own workshop and return authentication token"""
         from auth.auth import pwd_context
         
-        # Get the workshop_id from setup
         async with db_session as session:
-            from sqlalchemy import select
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            workshop_id = default_workshop.workshop_id
-        
-        # Create admin user directly in database
-        async with db_session as session:
+            # Create a dedicated workshop for admin
+            admin_workshop = models.Workshop(
+                workshop_name="Admin CustomerCar Workshop",
+                address="123 Admin St",
+                opening_hours="09:00",
+                closing_hours="18:00"
+            )
+            session.add(admin_workshop)
+            await session.commit()
+            await session.refresh(admin_workshop)
+            
+            # Create admin user with their workshop
             admin_user = models.User(
                 first_name="Admin",
                 last_name="User",
-                email="admin_workers@test.com",
-                hashed_password=pwd_context.hash("adminpass123"),
-                role=models.RoleEnum.admin,
-                workshop_id=workshop_id
+                email="admin_customercar@test.com",
+                hashed_password=pwd_context.hash("AdminPass123%"),
+                role="admin",
+                workshop_id=admin_workshop.workshop_id
             )
             session.add(admin_user)
             await session.commit()
         
         # Login to get token
         login_data = {
-            "username": "admin_workers@test.com",
-            "password": "adminpass123"
+            "username": "admin_customercar@test.com",
+            "password": "AdminPass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
         return response.json()["access_token"]
 
     @pytest_asyncio.fixture
-    async def manager_user_token(self, client, db_session, _setup_workshop):
-        """Create a manager user and return authentication token"""
+    async def manager_user_token(self, client, db_session):
+        """Create a manager user with their own workshop and return authentication token"""
         from auth.auth import pwd_context
         
-        # Get the workshop_id from setup
         async with db_session as session:
-            from sqlalchemy import select
-            result = await session.execute(select(models.Workshop).limit(1))
-            default_workshop = result.scalar_one()
-            workshop_id = default_workshop.workshop_id
-        
-        # Create manager user directly in database
-        async with db_session as session:
+            # Create a dedicated workshop for manager
+            manager_workshop = models.Workshop(
+                workshop_name="Manager CustomerCar Workshop",
+                address="456 Manager Ave",
+                opening_hours="08:00",
+                closing_hours="17:00"
+            )
+            session.add(manager_workshop)
+            await session.commit()
+            await session.refresh(manager_workshop)
+            
+            # Create manager user with their workshop
             manager_user = models.User(
                 first_name="Manager",
                 last_name="User",
-                email="manager_workers@test.com",
-                hashed_password=pwd_context.hash("managerpass123"),
+                email="manager_customercar@test.com",
+                hashed_password=pwd_context.hash("ManagerPass123%"),
                 role=models.RoleEnum.manager,
-                workshop_id=workshop_id
+                workshop_id=manager_workshop.workshop_id
             )
             session.add(manager_user)
             await session.commit()
         
         # Login to get token
         login_data = {
-            "username": "manager_workers@test.com",
-            "password": "managerpass123"
+            "username": "manager_customercar@test.com",
+            "password": "ManagerPass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -91,14 +100,58 @@ class TestWorkersIntegration:
             await session.refresh(workshop)
             return workshop.workshop_id
 
-    @pytest_asyncio.fixture
-    async def sample_worker(self, db_session, _setup_workshop):
-        """Create a sample worker for testing"""
+    def auth_headers(self, token):
+        """Helper method to create authorization headers"""
+        return {"Authorization": f"Bearer {token}"}
+
+    async def get_default_workshop_id(self, db_session):
+        """Helper method to get the default workshop ID"""
         async with db_session as session:
-            # Get the workshop_id from setup
+            from sqlalchemy import select
             result = await session.execute(select(models.Workshop).limit(1))
             default_workshop = result.scalar_one()
-            workshop_id = default_workshop.workshop_id
+            return default_workshop.workshop_id
+
+    async def get_user_workshop_id_from_token(self, token, db_session):
+        """Helper method to get workshop_id from JWT token"""
+        # Decode the token
+        payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        user_id = payload.get("user_id")
+        
+        # Query database for user's workshop_id
+        async with db_session as session:
+            result = await session.execute(
+                select(models.User).where(models.User.user_id == user_id)
+            )
+            user = result.scalar_one()
+            return user.workshop_id
+
+    @pytest_asyncio.fixture
+    async def sample_worker_for_admin(self, admin_user_token, db_session):
+        """Create a sample worker for admin's workshop"""
+        async with db_session as session:
+            # Get the workshop_id from admin token
+            workshop_id = await self.get_user_workshop_id_from_token(admin_user_token, db_session)
+            
+            worker = models.Worker(
+                first_name="John",
+                last_name="Smith",
+                phone="555-1234",
+                position="Mechanic",
+                nickname="Johnny",
+                workshop_id=workshop_id
+            )
+            session.add(worker)
+            await session.commit()
+            await session.refresh(worker)
+            return worker
+
+    @pytest_asyncio.fixture
+    async def sample_worker_for_manager(self, manager_user_token, db_session):
+        """Create a sample worker for manager's workshop"""
+        async with db_session as session:
+            # Get the workshop_id from manager token
+            workshop_id = await self.get_user_workshop_id_from_token(manager_user_token, db_session)
             
             worker = models.Worker(
                 first_name="John",
@@ -188,7 +241,7 @@ class TestWorkersIntegration:
         assert worker["position"] == "Painter"
         
         # Verify worker was assigned to manager's workshop
-        workshop_id = await self.get_default_workshop_id(db_session)
+        workshop_id = await self.get_user_workshop_id_from_token(manager_user_token, db_session)
         assert worker["workshop_id"] == workshop_id
         
         # Verify in database
@@ -251,7 +304,7 @@ class TestWorkersIntegration:
     # ================== READ WORKERS TESTS ==================
 
     @pytest.mark.asyncio
-    async def test_get_all_workers_as_admin(self, client, admin_user_token, sample_worker):
+    async def test_get_all_workers_as_admin(self, client, admin_user_token, sample_worker_for_admin):
         """Test admin user getting all workers from their workshop"""
         headers = self.auth_headers(admin_user_token)
         
@@ -265,7 +318,7 @@ class TestWorkersIntegration:
         # Find our sample worker
         found_worker = None
         for worker in workers:
-            if worker["worker_id"] == sample_worker.worker_id:
+            if worker["worker_id"] == sample_worker_for_admin.worker_id:
                 found_worker = worker
                 break
         
@@ -275,7 +328,7 @@ class TestWorkersIntegration:
         assert found_worker["position"] == "Mechanic"
 
     @pytest.mark.asyncio
-    async def test_get_all_workers_as_manager(self, client, manager_user_token, sample_worker):
+    async def test_get_all_workers_as_manager(self, client, manager_user_token, sample_worker_for_manager):
         """Test manager user getting all workers from their workshop"""
         headers = self.auth_headers(manager_user_token)
         
@@ -287,10 +340,10 @@ class TestWorkersIntegration:
         
         # Manager should only see workers from their workshop
         for worker in workers:
-            assert worker["workshop_id"] == sample_worker.workshop_id
+            assert worker["workshop_id"] == sample_worker_for_manager.workshop_id
 
     @pytest.mark.asyncio
-    async def test_get_all_workers_with_pagination(self, client, admin_user_token, sample_worker):
+    async def test_get_all_workers_with_pagination(self, client, admin_user_token, sample_worker_for_admin):
         """Test getting workers with pagination parameters"""
         headers = self.auth_headers(admin_user_token)
         
@@ -310,31 +363,30 @@ class TestWorkersIntegration:
     # ================== READ WORKER BY ID TESTS ==================
 
     @pytest.mark.asyncio
-    async def test_get_worker_by_id_as_admin(self, client, admin_user_token, sample_worker):
+    async def test_get_worker_by_id_as_admin(self, client, admin_user_token, sample_worker_for_admin):
         """Test admin user getting a specific worker by ID"""
         headers = self.auth_headers(admin_user_token)
         
-        response = client.get(f"/api/v1/workers/{sample_worker.worker_id}", headers=headers)
+        response = client.get(f"/api/v1/workers/{sample_worker_for_admin.worker_id}", headers=headers)
         assert response.status_code == 200
         
         worker = response.json()
-        assert worker["worker_id"] == sample_worker.worker_id
+        assert worker["worker_id"] == sample_worker_for_admin.worker_id
         assert worker["first_name"] == "John"
         assert worker["last_name"] == "Smith"
         assert worker["position"] == "Mechanic"
         assert worker["nickname"] == "Johnny"
 
     @pytest.mark.asyncio
-    async def test_get_worker_by_id_as_manager(self, client, manager_user_token, sample_worker):
+    async def test_get_worker_by_id_as_manager(self, client, manager_user_token, sample_worker_for_manager):
         """Test manager user getting a worker from their workshop"""
         headers = self.auth_headers(manager_user_token)
         
-        response = client.get(f"/api/v1/workers/{sample_worker.worker_id}", headers=headers)
+        response = client.get(f"/api/v1/workers/{sample_worker_for_manager.worker_id}", headers=headers)
         assert response.status_code == 200
         
         worker = response.json()
-        assert worker["worker_id"] == sample_worker.worker_id
-
+        assert worker["worker_id"] == sample_worker_for_manager.worker_id
     @pytest.mark.asyncio
     async def test_get_worker_by_id_not_found(self, client, admin_user_token):
         """Test getting a worker that doesn't exist"""
@@ -344,9 +396,9 @@ class TestWorkersIntegration:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_get_worker_by_id_unauthenticated(self, client, sample_worker):
+    async def test_get_worker_by_id_unauthenticated(self, client, sample_worker_for_manager):
         """Test getting worker by ID without authentication fails"""
-        response = client.get(f"/api/v1/workers/{sample_worker.worker_id}")
+        response = client.get(f"/api/v1/workers/{sample_worker_for_manager.worker_id}")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -372,7 +424,7 @@ class TestWorkersIntegration:
     # ================== UPDATE WORKER TESTS ==================
 
     @pytest.mark.asyncio
-    async def test_update_worker_as_admin(self, client, admin_user_token, sample_worker, db_session):
+    async def test_update_worker_as_admin(self, client, admin_user_token, sample_worker_for_admin, db_session):
         """Test admin user updating a worker"""
         headers = self.auth_headers(admin_user_token)
         update_data = {
@@ -381,7 +433,7 @@ class TestWorkersIntegration:
             "phone": "555-0000"
         }
         
-        response = client.patch(f"/api/v1/workers/{sample_worker.worker_id}", json=update_data, headers=headers)
+        response = client.patch(f"/api/v1/workers/{sample_worker_for_admin.worker_id}", json=update_data, headers=headers)
         assert response.status_code == 200
         
         worker = response.json()
@@ -394,7 +446,7 @@ class TestWorkersIntegration:
         # Verify changes in database
         async with db_session as session:
             result = await session.execute(
-                select(models.Worker).where(models.Worker.worker_id == sample_worker.worker_id)
+                select(models.Worker).where(models.Worker.worker_id == sample_worker_for_admin.worker_id)
             )
             db_worker = result.scalar_one()
             assert db_worker.first_name == "Johnny"
@@ -402,7 +454,7 @@ class TestWorkersIntegration:
             assert db_worker.phone == "555-0000"
 
     @pytest.mark.asyncio
-    async def test_update_worker_as_manager(self, client, manager_user_token, sample_worker, db_session):
+    async def test_update_worker_as_manager(self, client, manager_user_token, sample_worker_for_manager, db_session):
         """Test manager user updating a worker in their workshop"""
         headers = self.auth_headers(manager_user_token)
         update_data = {
@@ -410,7 +462,7 @@ class TestWorkersIntegration:
             "position": "Lead Mechanic"
         }
         
-        response = client.patch(f"/api/v1/workers/{sample_worker.worker_id}", json=update_data, headers=headers)
+        response = client.patch(f"/api/v1/workers/{sample_worker_for_manager.worker_id}", json=update_data, headers=headers)
         assert response.status_code == 200
         
         worker = response.json()
@@ -420,21 +472,21 @@ class TestWorkersIntegration:
         # Verify changes in database
         async with db_session as session:
             result = await session.execute(
-                select(models.Worker).where(models.Worker.worker_id == sample_worker.worker_id)
+                select(models.Worker).where(models.Worker.worker_id == sample_worker_for_manager.worker_id)
             )
             db_worker = result.scalar_one()
             assert db_worker.nickname == "Super Johnny"
             assert db_worker.position == "Lead Mechanic"
 
     @pytest.mark.asyncio
-    async def test_update_worker_partial_update(self, client, admin_user_token, sample_worker):
+    async def test_update_worker_partial_update(self, client, admin_user_token, sample_worker_for_admin):
         """Test updating only some fields of a worker"""
         headers = self.auth_headers(admin_user_token)
         update_data = {
             "phone": "555-9999"
         }
         
-        response = client.patch(f"/api/v1/workers/{sample_worker.worker_id}", json=update_data, headers=headers)
+        response = client.patch(f"/api/v1/workers/{sample_worker_for_admin.worker_id}", json=update_data, headers=headers)
         assert response.status_code == 200
         
         worker = response.json()
@@ -453,11 +505,11 @@ class TestWorkersIntegration:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_update_worker_unauthenticated(self, client, sample_worker):
+    async def test_update_worker_unauthenticated(self, client, sample_worker_for_manager):
         """Test updating worker without authentication fails"""
         update_data = {"position": "New Position"}
         
-        response = client.patch(f"/api/v1/workers/{sample_worker.worker_id}", json=update_data)
+        response = client.patch(f"/api/v1/workers/{sample_worker_for_manager.worker_id}", json=update_data)
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -484,10 +536,10 @@ class TestWorkersIntegration:
     # ================== DELETE WORKER TESTS ==================
 
     @pytest.mark.asyncio
-    async def test_delete_worker_as_admin(self, client, admin_user_token, sample_worker, db_session):
+    async def test_delete_worker_as_admin(self, client, admin_user_token, sample_worker_for_admin, db_session):
         """Test admin user deleting a worker"""
         headers = self.auth_headers(admin_user_token)
-        worker_id = sample_worker.worker_id
+        worker_id = sample_worker_for_admin.worker_id
         
         response = client.delete(f"/api/v1/workers/{worker_id}", headers=headers)
         assert response.status_code == 200
@@ -506,10 +558,10 @@ class TestWorkersIntegration:
             assert db_worker is None
 
     @pytest.mark.asyncio
-    async def test_delete_worker_as_manager(self, client, manager_user_token, sample_worker, db_session):
+    async def test_delete_worker_as_manager(self, client, manager_user_token, sample_worker_for_manager, db_session):
         """Test manager user deleting a worker from their workshop"""
         headers = self.auth_headers(manager_user_token)
-        worker_id = sample_worker.worker_id
+        worker_id = sample_worker_for_manager.worker_id
         
         response = client.delete(f"/api/v1/workers/{worker_id}", headers=headers)
         assert response.status_code == 200
@@ -531,9 +583,9 @@ class TestWorkersIntegration:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_worker_unauthenticated(self, client, sample_worker):
+    async def test_delete_worker_unauthenticated(self, client, sample_worker_for_manager):
         """Test deleting worker without authentication fails"""
-        response = client.delete(f"/api/v1/workers/{sample_worker.worker_id}")
+        response = client.delete(f"/api/v1/workers/{sample_worker_for_manager.worker_id}")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -573,7 +625,7 @@ class TestWorkersIntegration:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_update_worker_with_empty_fields(self, client, admin_user_token, sample_worker):
+    async def test_update_worker_with_empty_fields(self, client, admin_user_token, sample_worker_for_admin):
         """Test updating worker with None values to clear optional fields"""
         headers = self.auth_headers(admin_user_token)
         update_data = {
@@ -581,7 +633,7 @@ class TestWorkersIntegration:
             "nickname": None
         }
         
-        response = client.patch(f"/api/v1/workers/{sample_worker.worker_id}", json=update_data, headers=headers)
+        response = client.patch(f"/api/v1/workers/{sample_worker_for_admin.worker_id}", json=update_data, headers=headers)
         assert response.status_code == 200
         
         worker = response.json()

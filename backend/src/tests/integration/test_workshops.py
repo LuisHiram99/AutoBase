@@ -31,7 +31,7 @@ class TestWorkshopsIntegration:
                 first_name="Admin",
                 last_name="User",
                 email="admin_workshops@test.com",
-                hashed_password=pwd_context.hash("adminpass123"),
+                hashed_password=pwd_context.hash("Adminpass123%"),
                 role=models.RoleEnum.admin,
                 workshop_id=workshop_id
             )
@@ -41,7 +41,7 @@ class TestWorkshopsIntegration:
         # Login to get token
         login_data = {
             "username": "admin_workshops@test.com",
-            "password": "adminpass123"
+            "password": "Adminpass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -71,7 +71,7 @@ class TestWorkshopsIntegration:
                 first_name="Manager",
                 last_name="User",
                 email="manager_workshops@test.com",
-                hashed_password=pwd_context.hash("managerpass123"),
+                hashed_password=pwd_context.hash("Managerpass123%"),
                 role=models.RoleEnum.manager,
                 workshop_id=workshop_id
             )
@@ -81,7 +81,7 @@ class TestWorkshopsIntegration:
         # Login to get token
         login_data = {
             "username": "manager_workshops@test.com",
-            "password": "managerpass123"
+            "password": "Managerpass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200

@@ -80,10 +80,10 @@ class User(UserBase):
     }
 
 class UserCreate(BaseModel):
-    first_name: str = Field(..., example="John", min_length=2, max_length=100)
-    last_name: str = Field(..., example="Doe", min_length=2, max_length=100)
-    email: EmailStr = Field(..., example="john@example.com", max_length=100)
-    password: str = Field(..., example="Secretpassword12!", min_length=10, max_length=100)
+    first_name: str = Field(..., min_length=2, max_length=100)
+    last_name: str = Field(..., min_length=2, max_length=100)
+    email: EmailStr = Field(..., max_length=100)
+    password: str = Field(..., min_length=10, max_length=100)
     role: RoleEnum
     workshop_id: int
 
@@ -148,13 +148,13 @@ class UserUpdate(BaseModel):
         return v
 
 class CurrentUserUpdate(BaseModel):
-    first_name: Optional[str] = Field(None, example="John", min_length=2, max_length=100)
-    last_name: Optional[str] = Field(None, example="Doe", min_length=2, max_length=100)
-    email: Optional[EmailStr] = Field(None, example="john@example.com", max_length=100)
+    first_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    last_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    email: Optional[EmailStr] = Field(None, max_length=100)
 
 class CurrentUserPassword(BaseModel):
-    old_password: str = Field(..., example="Oldpassword1!", min_length=10, max_length=100)
-    new_password: str = Field(..., example="Newpassword1!", min_length=10, max_length=100)
+    old_password: str = Field(..., min_length=10, max_length=100)
+    new_password: str = Field(..., min_length=10, max_length=100)
 
     @field_validator('new_password')
     @classmethod
@@ -407,10 +407,10 @@ class JobCreate(BaseModel):
 
 class JobCreateForWorkshop(BaseModel):
     customer_car_id: int
-    invoice: str
-    service_description: Optional[str] = None
-    start_date: str
-    end_date: Optional[str] = None
+    invoice: str = Field(..., min_length=1, max_length=100)
+    service_description: Optional[str] = Field(None, max_length=255)
+    start_date: str = Field(..., min_length=1, max_length=20)
+    end_date: Optional[str] = Field(None, max_length=20)
     status: StatusEnum
 
 class JobUpdate(BaseModel):

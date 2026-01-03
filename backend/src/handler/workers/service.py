@@ -54,6 +54,41 @@ async def add_worker_to_current_user_workshop(
                      extra={"user_id": current_user["user_id"], "endpoint": "add_worker_to_current_user_workshop"})
         raise fetchErrorException
 
+async def get_all_workers(
+        db: AsyncSession, 
+        skip: int = 0, 
+        limit: int = 100):
+    '''
+    Construct a query to get all workers in the system (admin only)
+    '''
+    try: 
+        logger.debug("Retrieving all workers in the system",
+                     extra={"endpoint": "get_all_workers"})
+        
+        # Query to get all workers with pagination
+        result = await db.execute(
+            select(models.Worker)
+            .offset(skip)
+            .limit(limit)
+        )
+        # Get the query results
+        workers = result.scalars().all()
+        if workers is None:
+            logger.error("No workers found in the system",
+                         extra={"endpoint": "get_all_workers"})
+            raise notFoundException
+        
+        logger.info(f"Retrieved {len(workers)} workers in the system",
+                    extra={"endpoint": "get_all_workers"})
+        return workers
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.critical(f"Database error in get_all_workers: {e}",
+                     extra={"endpoint": "get_all_workers"})
+        raise fetchErrorException
+
+
 async def get_all_workers_for_current_user_workshop(
         db: AsyncSession, 
         current_user: dict, 

@@ -34,14 +34,17 @@ logger.add(
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
     level=log_level
 )
+
+
 logger.add(
     str(logs_dir / "app.log"),
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
     level=log_level,
-    rotation="30 minutes",
-    retention="30 minutes",
+    rotation="10 MB",
+    retention="7 days",
 )
 
+"""
 if logs_source_token:
     handler = LogtailHandler(source_token=logs_source_token, host=os.getenv("LOGS_SOURCE_HOST"))
     logger.add(
@@ -50,7 +53,7 @@ if logs_source_token:
         format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
         serialize=True
     )
-
+"""
 
 
 logger.debug(f"Logger initialized in {environment} mode with level {log_level}")

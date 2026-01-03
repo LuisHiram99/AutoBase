@@ -18,7 +18,7 @@ class TestAuthService:
             "first_name": "Test",
             "last_name": "User",
             "email": "test@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201
@@ -30,7 +30,7 @@ class TestAuthService:
             "first_name": "Test",
             "last_name": "User",
             "email": "duplicate@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         
         # First creation should succeed
@@ -48,7 +48,7 @@ class TestAuthService:
             "first_name": "Test",
             "last_name": "User",
             "email": "invalidemail",  # Invalid email format
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 422  # Validation error
@@ -60,7 +60,7 @@ class TestAuthService:
             "first_name": "Test",
             "last_name": "User",
             "email": "testlogin@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201
@@ -68,7 +68,7 @@ class TestAuthService:
         # Now test login with form data (OAuth2 expects form data)
         login_data = {
             "username": "testlogin@mail.com",  # OAuth2 uses 'username' field
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -91,7 +91,7 @@ class TestAuthService:
             "first_name": "Test",
             "last_name": "User",
             "email": "testfail@mail.com",
-            "password": "correctpassword"
+            "password": "Correctpassword20%"
         }
         client.post("/api/v1/auth/signup", json=user_data)
         
@@ -120,7 +120,7 @@ class TestAuthService:
             "first_name": "Test",
             # Missing last_name
             "email": "testmissing@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 422  # Validation error
@@ -132,7 +132,7 @@ class TestAuthService:
             "first_name": "Role",
             "last_name": "Tester",
             "email": "roletester@mail.com",
-            "password": "securepassword"
+            "password": "Securepassword20%"
         }
         response = client.post("/api/v1/auth/signup", json=user_data)
         assert response.status_code == 201

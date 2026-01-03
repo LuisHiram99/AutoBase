@@ -25,7 +25,7 @@ class TestCarsIntegration:
                 first_name="Admin",
                 last_name="User",
                 email="admin_cars@test.com",
-                hashed_password=pwd_context.hash("adminpass123"),
+                hashed_password=pwd_context.hash("Adminpass123%"),
                 role="admin",
                 workshop_id=workshop_id
             )
@@ -35,7 +35,7 @@ class TestCarsIntegration:
         # Login to get token
         login_data = {
             "username": "admin_cars@test.com",
-            "password": "adminpass123"
+            "password": "Adminpass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -59,7 +59,7 @@ class TestCarsIntegration:
                 first_name="Manager",
                 last_name="User",
                 email="manager_cars@test.com",
-                hashed_password=pwd_context.hash("managerpass123"),
+                hashed_password=pwd_context.hash("Managerpass123%"),
                 role=models.RoleEnum.manager,
                 workshop_id=workshop_id
             )
@@ -69,7 +69,7 @@ class TestCarsIntegration:
         # Login to get token
         login_data = {
             "username": "manager_cars@test.com",
-            "password": "managerpass123"
+            "password": "Managerpass123%"
         }
         response = client.post("/api/v1/auth/login", data=login_data)
         assert response.status_code == 200
@@ -222,7 +222,7 @@ class TestCarsIntegration:
         async with db_session as session:
             cars = [
                 models.Car(
-                    year=2020 + i,
+                    year=2010 + i,
                     brand=f"Brand{i}",
                     model=f"Model{i}"
                 ) for i in range(15)

@@ -367,7 +367,7 @@ async def get_current_user_workshop(
                          extra={"user_id": current_user["user_id"], "endpoint": "get_current_user_workshop"})
             raise notFoundException
         logger.info(f"User {current_user['user_id']} fetched workshop {workshop.workshop_id}")
-        return workshop
+        return [workshop]  # Return as list to match endpoint response type
     except HTTPException:
         raise
     except Exception as e:
